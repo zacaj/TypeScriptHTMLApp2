@@ -21,14 +21,13 @@
     <Content Include="Copy of app.js">
       <DependentUpon>player.ts</DependentUpon>
     </Content>
-    <Content Include="input.ts" />
+    <TypeScriptCompile Include="input.ts" />
     <Content Include="level.js" />
-    <Content Include="level.txt" />
-    <Content Include="math.ts" />
+    <TypeScriptCompile Include="math.ts" />
     <Content Include="texture.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="WebGL.d.ts" />
+    <TypeScriptCompile Include="WebGL.d.ts" />
     <Content Include="default.htm" />
     <Content Include="app.js">
       <DependentUpon>app.ts</DependentUpon>
@@ -36,6 +35,9 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="app.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="zacajcom.pubxml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

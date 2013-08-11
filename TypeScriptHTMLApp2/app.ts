@@ -52,8 +52,17 @@ class Sector {
     draw() {
         for (var i = 0; i < this.walls.length; i++)
         {
-            var wall = this.walls[i];
-            quad(wall.a, wall.b, this.bottom, this.top, getTex(wall.textureName));
+			var wall = this.walls[i];
+			if (wall.isPortal)
+			{
+				var s = wall.portal;
+				if (s.bottom >this.bottom)
+					quad(wall.a, wall.b, this.bottom, s.bottom, getTex(wall.textureName));
+				if (s.top < this.top)
+					quad(wall.a, wall.b, s.top, this.top, getTex(wall.textureName));
+			}
+			else
+				quad(wall.a, wall.b, this.bottom, this.top, getTex(wall.textureName));
         }
     }
 }
@@ -74,7 +83,7 @@ window.onload = () => {
             alert("your browser does not support webgl");
     }
     initGL();
-    load();
+    load((<any>document.getElementById("frmFile")).contentWindow.document.body.childNodes[0].innerHTML);
 };
 function loaded() {
 
@@ -84,11 +93,18 @@ function update() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.uniformMatrix4fv(perspectiveP,false,MakePerspective(90, 4 / 3, 1, 1000));
     gl.uniformMatrix4fv(transformP,false,MakeTransform());
-    //quad(new vec2(-5, -5), new vec2(5, -5), -3, 3, getTex("texture.bmp"));
-    player.s.draw();
+	//quad(new vec2(-5, -5), new vec2(5, -5), -3, 3, getTex("texture.bmp"));
+	for (var i = 0; i < sectors.length; i++)
+		sectors[i].draw();
     for (var i = 0; i < entities.length; i++)
     {
-        entities[i].update();
+		entities[i].update();
+		if (!entities[i].s.pointIsIn(entities[i].p))
+		{
+			var t = getSector(entities[i].p);
+			if (t != null)
+				entities[i].s = t;
+		}
     }
 }
 function quad(a: vec2, b: vec2, bottom: number, top: number, texId) {
@@ -229,12 +245,28 @@ function LoadTexture(names: string[]) {
     names.splice(0, 1);
     Img.src = name;
 };
-function load() {
+function otherWallWithPoint(wall: Wall, p: vec2, list?: Wall[], inSector?): Wall {
+	if (!list)
+		list = walls;
+	if (!inSector)
+		inSector = false;
+	for (var i = 0; i < list.length; i++)
+	{
+		if (list[i] == wall)
+			continue;
+		if (list[i].s != null && !inSector)
+			continue;
+		if (list[i].a.dist(p) < .1 || list[i].b.dist(p) < .1)
+			return list[i];
+	}
+	return null;
+}
+function load(str) {
     var textures: string[] = new Array<string>();
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
+    entities.splice(0, entities.length);
     lpts = new Array<vec2>();
-    var str = (<any>document.getElementById("frmFile")).contentWindow.document.body.childNodes[0].innerHTML;
     var lines = str.split('\n');
     var nWall: number = parseInt(lines[0]);
     for (var i = 0; i < nWall; i++)
@@ -279,7 +311,8 @@ function load() {
             s.tris.push(makeTri(s.pts[t[0]], s.pts[t[1]], s.pts[t[2]]));
         }
         s.p = getVec2(lines[at++]);
-        sectors.push(s);
+		sectors.push(s);
+
     }
     for (var i = 0; i < walls.length; i++)
     {
@@ -290,7 +323,32 @@ function load() {
             walls[i].portal = sectors[t.y];
             walls[i].isPortal = true;
         }
-    }
+	}
+	for (var i = 0; i < sectors.length; i++)
+	{
+
+		s.pts.splice(0, s.pts.length);
+		var lastWall = s.walls[0];
+		var pt = lastWall.b;
+		s.pts.push(pt);
+		while (true)
+		{
+			var wa = otherWallWithPoint(lastWall, pt, s.walls, true);
+			if (wa == null)
+			{
+				alert("no closed loop!");
+				break;
+			}
+			if (wa == s.walls[0])
+				break;
+			if (wa.a.dist(pt) < .1)
+				pt = wa.b;
+			else
+				pt = wa.a;
+			s.pts.push(pt);
+			lastWall = wa;
+		}
+	}
     var nEntity = parseInt(lines[at++]);
     for (var i = 0; i < nEntity; i++)
     {
