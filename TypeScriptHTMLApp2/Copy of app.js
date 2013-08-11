@@ -1,70 +1,23 @@
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 ///<reference path="WebGL.d.ts" />
-///<reference path="player.ts" />
-///<reference path="math.ts" />
 var gl;
 var ShaderProgram, VertexPosition, VertexTexture;
 var vertBuffer, uvBuffer;
 var perspectiveP, transformP;
-
-var Entity = (function () {
-    function Entity(p) {
-        this.z = 0;
-        this.p = (p);
-        this.s = getSector(this.p);
+var vec2 = (function () {
+    function vec2(x, y) {
+        this.x = x;
+        this.y = y;
     }
-    Entity.prototype.update = function () {
+    vec2.prototype.dist = function (p) {
+        var d = new vec2(p.x - this.x, p.y - this.y);
+        return Math.sqrt(d.x * d.x + d.y * d.y);
     };
-    return Entity;
+    return vec2;
 })();
-var entities = new Array();
-var Entity3D = (function (_super) {
-    __extends(Entity3D, _super);
-    function Entity3D(p) {
-        this.angle = 0;
-        _super.call(this, p);
-    }
-    return Entity3D;
-})(Entity);
-var Wall = (function () {
-    function Wall() {
-        this.s = null;
-        this.textureName = "";
-        this.portal = null;
-        this.isPortal = false;
-        this.left = null;
-        this.right = null;
-    }
-    return Wall;
-})();
-var walls = new Array();
-var Sector = (function () {
-    function Sector() {
-    }
-    Sector.prototype.pointIsIn = function (p) {
-        return pointInPolygon(p, this.pts);
-    };
-    Sector.prototype.draw = function () {
-        for (var i = 0; i < this.walls.length; i++) {
-            var wall = this.walls[i];
-            quad(wall.a, wall.b, this.bottom, this.top, getTex(wall.textureName));
-        }
-    };
-    return Sector;
-})();
-var sectors = new Array();
-function getSector(p) {
-    for (var i = 0; i < sectors.length; i++) {
-        if (sectors[i].pointIsIn(p))
-            return sectors[i];
-    }
-    return null;
+function copyvec2(p) {
+    return new vec2(p.x, p.y);
 }
+
 window.onload = function () {
     gl = (document.getElementById('canvas')).getContext("webgl");
     if (!gl) {
@@ -73,7 +26,7 @@ window.onload = function () {
             alert("your browser does not support webgl");
     }
     initGL();
-    load();
+    LoadTexture(["texture.bmp"]);
 };
 function loaded() {
     setInterval(update, 17);
@@ -82,12 +35,7 @@ function update() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.uniformMatrix4fv(perspectiveP, false, MakePerspective(90, 4 / 3, 1, 1000));
     gl.uniformMatrix4fv(transformP, false, MakeTransform());
-
-    //quad(new vec2(-5, -5), new vec2(5, -5), -3, 3, getTex("texture.bmp"));
-    player.s.draw();
-    for (var i = 0; i < entities.length; i++) {
-        entities[i].update();
-    }
+    quad(new vec2(-5, -5), new vec2(5, -5), -3, 3, getTex("texture.bmp"));
 }
 function quad(a, b, bottom, top, texId) {
     gl.bindTexture(gl.TEXTURE_2D, texId);
@@ -143,7 +91,7 @@ function initGL() {
     vertBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertBuffer);
     gl.vertexAttribPointer(VertexPosition, 3, gl.FLOAT, false, 0, 0);
-    gl.clearColor(0, 0, 0, 1);
+    gl.clearColor(1, 0, 0, 1);
     gl.enable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
 }
@@ -174,46 +122,24 @@ function MakePerspective(FOV, AspectRatio, Closest, Farest) {
     ];
 }
 function MakeTransform() {
-    var a = (player.angle - 90) * Math.PI / 180;
-    var rot = [
-        Math.cos(a),
+    return [
+        1,
         0,
-        Math.cos(a - Math.PI / 2),
+        0,
         0,
         0,
         1,
         0,
         0,
-        Math.sin(a),
         0,
-        Math.sin(a - Math.PI / 2),
         0,
-        player.p.x,
-        player.z,
-        player.p.y,
+        1,
+        0,
+        0,
+        0,
+        0,
         1
     ];
-
-    return transpose(inverse(transpose(rot)));
-    var t = [
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        -player.p.x,
-        -player.z,
-        -player.p.y,
-        1
-    ];
-    return multMatrix(rot, t);
 }
 function LoadShader(Script) {
     var Code = "";
@@ -260,89 +186,4 @@ function LoadTexture(names) {
     Img.src = name;
 }
 ;
-function load() {
-    var textures = new Array();
-    walls.splice(0, walls.length);
-    sectors.splice(0, sectors.length);
-    lpts = new Array();
-    var str = (document.getElementById("frmFile")).contentWindow.document.body.childNodes[0].innerHTML;
-    var lines = str.split('\n');
-    var nWall = parseInt(lines[0]);
-    for (var i = 0; i < nWall; i++) {
-        var wall = new Wall();
-        wall.a = getVec2(lines[i * 4 + 0 + 1]);
-        wall.b = getVec2(lines[i * 4 + 1 + 1]);
-        (wall).t = getVec2(lines[i * 4 + 2 + 1]);
-        wall.textureName = lines[i * 4 + 3 + 1].split(',')[1];
-        if (textures.indexOf(wall.textureName) == -1)
-            textures.push(wall.textureName);
-        walls.push(wall);
-    }
-    var at = nWall * 4 + 1;
-    var nSector = parseInt(lines[at]);
-    at++;
-    for (var i = 0; i < nSector; i++) {
-        var s = new Sector();
-        s.walls = new Array();
-        nWall = parseInt(lines[at++]);
-        for (var j = 0; j < nWall; j++)
-            s.walls.push(walls[lines[at + j]]);
-        at += nWall;
-        var t = getVec2(lines[at++]);
-        s.bottom = t.x;
-        s.top = t.y;
-        t = lines[at++].split(',');
-        s.floorColor = t[0];
-        s.ceilingColor = t[1];
-        var nP = parseInt(lines[at++]);
-        s.pts = new Array();
-        for (var j = 0; j < nP; j++) {
-            s.pts.push(getVec2(lines[at++]));
-        }
-        var nT = parseInt(lines[at++]);
-        s.tris = new Array();
-        for (var j = 0; j < nT; j++) {
-            var t = lines[at++].split(',');
-            s.tris.push(makeTri(s.pts[t[0]], s.pts[t[1]], s.pts[t[2]]));
-        }
-        s.p = getVec2(lines[at++]);
-        sectors.push(s);
-    }
-    for (var i = 0; i < walls.length; i++) {
-        var t = (walls[i]).t;
-        walls[i].s = sectors[t.x];
-        if (t.y != -1) {
-            walls[i].portal = sectors[t.y];
-            walls[i].isPortal = true;
-        }
-    }
-    var nEntity = parseInt(lines[at++]);
-    for (var i = 0; i < nEntity; i++) {
-        var str = lines[at++].split(',')[1];
-        var p = getVec2(lines[at++]);
-        var type = str.split('\n')[0];
-        if (type == "spawn")
-            entities.push(new Player(p));
-    }
-
-    LoadTexture(textures);
-}
-var lpts;
-function getVec2(str) {
-    var strs = str.split(',');
-    var v = new vec2(parseFloat(strs[0]), parseFloat(strs[1]));
-    for (var i = 0; i < lpts.length; i++)
-        if (lpts[i].dist(v) < .1)
-            return lpts[i];
-    lpts.push(v);
-    return v;
-}
-function makeTri(a, b, c) {
-    var r = new Triangle();
-    (r).points_ = new Array();
-    (r).points_.push(a);
-    (r).points_.push(b);
-    (r).points_.push(c);
-    return r;
-}
-//@ sourceMappingURL=app.js.map
+//@ sourceMappingURL=Copy of app.js.map

@@ -17,7 +17,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Include="app.css" />
+    <TypeScriptCompile Include="player.ts" />
+    <Content Include="Copy of app.js">
+      <DependentUpon>player.ts</DependentUpon>
+    </Content>
+    <Content Include="input.ts" />
+    <Content Include="level.js" />
     <Content Include="level.txt" />
+    <Content Include="math.ts" />
     <Content Include="texture.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
