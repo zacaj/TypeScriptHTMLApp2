@@ -2,6 +2,7 @@
 ///<reference path="input.ts" />
 var player: Player;
 class Player extends Entity3D {
+	height = 5;
     update() {
         if (key["A"])
             this.angle += 5;
@@ -18,6 +19,14 @@ class Player extends Entity3D {
             n.x -= Math.cos(this.angle * Math.PI / 180);
             n.y -= Math.sin(this.angle * Math.PI / 180);
 		}
+		if (key["C"])
+		{
+			this.height = 3;
+		}
+		else
+		{
+			this.height = 5;
+		}
 		var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
 		var md = dp.dist(new vec2(0, 0));
 		if (md > .00000000001)
@@ -33,7 +42,8 @@ class Player extends Entity3D {
 					w = this.s.extendedWalls[i];
 				}
 			}
-			if (sd <= this.r * this.r)
+
+			if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom-this.z   > 2.1) || w.isPortal==false))
 			{
 				sd = Math.sqrt(sd);
 				var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
@@ -41,12 +51,24 @@ class Player extends Entity3D {
 				this.p = wp.plus(w.n.scale(this.r));
 			}
 			else
+			{
+				if (w.isPortal)
+				{
+					//this.s = w.portal;
+					//this.z = Math.max(this.z,w.portal.bottom + 5);
+				}
 				this.p = n;
+			}
 		}
+		if (this.z - this.s.bottom > +.3)
+			this.z -= .3;
+		else if (this.z - this.s.bottom < -.3)
+			this.z += .3;
     }
     constructor(p:vec2) {
         super(p);
         player = this;
-        this.z = 5;
+		this.z = 0;
+		this.r = 1.5;
     }
 }

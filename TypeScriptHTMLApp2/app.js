@@ -267,31 +267,12 @@ function MakeTransform() {
         Math.sin(a - Math.PI / 2),
         0,
         player.p.x,
-        player.z,
+        (player.z + player.height),
         player.p.y,
         1
     ];
 
     return transpose(inverse(transpose(rot)));
-    var t = [
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        -player.p.x,
-        -player.z,
-        -player.p.y,
-        1
-    ];
-    return multMatrix(rot, t);
 }
 function LoadShader(Script) {
     var Code = "";

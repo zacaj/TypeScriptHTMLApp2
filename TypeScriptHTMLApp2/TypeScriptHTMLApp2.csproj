@@ -22,7 +22,9 @@
       <DependentUpon>player.ts</DependentUpon>
     </Content>
     <TypeScriptCompile Include="input.ts" />
-    <Content Include="level.js" />
+    <Content Include="level.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <TypeScriptCompile Include="math.ts" />
     <Content Include="texture.bmp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
