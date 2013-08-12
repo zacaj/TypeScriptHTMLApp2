@@ -12,6 +12,8 @@ var Player = (function (_super) {
     function Player(p) {
         _super.call(this, p);
         this.height = 5;
+        this.vpa = new vec2(0, 0);
+        this.vpb = new vec2(0, 0);
         player = this;
         this.z = 0;
         this.r = 1.5;
@@ -64,10 +66,13 @@ var Player = (function (_super) {
             } else {
                 this.p = n;
             }
-        }
-        if (this.z - this.s.bottom > +.3)
-            this.z -= .3; else if (this.z - this.s.bottom < -.3)
+        } else if (this.z - this.s.bottom < -.3)
             this.z += .3;
+        _super.prototype.update.call(this);
+        this.vpa.x = this.p.x + Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * 10000;
+        this.vpa.y = this.p.y + Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * 10000;
+        this.vpb.x = this.p.x + Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
+        this.vpb.y = this.p.y + Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
     };
     return Player;
 })(Entity3D);

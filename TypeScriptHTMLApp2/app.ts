@@ -14,12 +14,17 @@ class Entity {
     p: vec2;
 	z: number;
 	r: number = 1;
-    update() { }
+	gravity = .3;
+	update() {
+		if (this.z - this.s.bottom > this.gravity)
+			this.z -= this.gravity;
+	}
     constructor(p: vec2) {
         this.z = 0;
         this.p = (p);
         this.s = getSector(this.p);
-    }
+	}
+	draw() { }
 }
 var entities: Entity[] = new Array<Entity>();
 class Entity3D extends Entity {
@@ -28,6 +33,21 @@ class Entity3D extends Entity {
         this.angle = 0;
         super(p);
     }
+}
+class BillboardEntity extends Entity {
+	tex: Texture;
+	d: vec2 = new vec2(1, 1);
+	constructor(p: vec2, tex: Texture) {
+		super(p);
+		this.tex = tex;
+	}
+	draw() {
+		var n = this.p.minus(projectPoint(this.p,player.vpa,player.vpb));
+		n.normalize();
+		var a = new vec2(n.y, -n.x).plus(this.p);
+		var b = new vec2(-n.y, n.x).plus(this.p);
+		quad(a, b, this.z, this.z + this.d.y, this.tex);
+	}
 }
 class Wall {
     a: vec2;
@@ -167,6 +187,9 @@ function loaded() {
 	crosshair.d = new vec2(.07, .07);
 	crosshair.tex = getTex("LB_Crosshair.png");
 	guis.push(crosshair);
+	
+	var bb = new BillboardEntity(player.p.plus(new vec2(30, 30)), getTex("LB_Bow01.png"));
+	entities.push(bb);
     setInterval(update, 17);
 }
 function update() {
@@ -176,6 +199,8 @@ function update() {
     gl.uniformMatrix4fv(transformPT,false,MakeTransform());
 	for (var i = 0; i < sectors.length; i++)
 		sectors[i].draw();
+	gl.uniform1f(MultPosition, 1);
+	gl.uniform4f(ColorPosition, 0, 0, 0, 0);
     for (var i = 0; i < entities.length; i++)
     {
 		entities[i].update();
@@ -185,6 +210,7 @@ function update() {
 			if (t != null)
 				entities[i].s = t;
 		}
+		entities[i].draw();
 	}
 	gl.disable(gl.DEPTH_TEST);
 	gl.uniform1f(MultPosition, 1);
@@ -399,7 +425,7 @@ function isLeft(a,b,c):bool {
 	return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-    var textures = ["LB_Crosshair.png",35,24];
+	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);

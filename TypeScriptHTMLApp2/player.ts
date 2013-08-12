@@ -3,6 +3,8 @@
 var player: Player;
 class Player extends Entity3D {
 	height = 5;
+	vpa: vec2=new vec2(0,0);//view plane
+	vpb: vec2=new vec2(0,0);
     update() {
         if (key["Q"])
             this.angle += 5;
@@ -65,10 +67,13 @@ class Player extends Entity3D {
 				this.p = n;
 			}
 		}
-		if (this.z - this.s.bottom > +.3)
-			this.z -= .3;
 		else if (this.z - this.s.bottom < -.3)
 			this.z += .3;
+		super.update();
+		this.vpa.x=this.p.x+Math.cos(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
+		this.vpa.y = this.p.y+Math.sin(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
+		this.vpb.x=this.p.x+Math.cos(this.angle * Math.PI / 180 - Math.PI / 2)*10000;
+		this.vpb.y = this.p.y+Math.sin(this.angle * Math.PI / 180 - Math.PI / 2)*10000;
     }
     constructor(p:vec2) {
         super(p);

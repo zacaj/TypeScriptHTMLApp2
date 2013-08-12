@@ -17,11 +17,17 @@ var perspectivePC, transformPC;
 var Entity = (function () {
     function Entity(p) {
         this.r = 1;
+        this.gravity = .3;
         this.z = 0;
         this.p = (p);
         this.s = getSector(this.p);
     }
     Entity.prototype.update = function () {
+        if (this.z - this.s.bottom > this.gravity)
+            this.z -= this.gravity;
+    };
+
+    Entity.prototype.draw = function () {
     };
     return Entity;
 })();
@@ -33,6 +39,22 @@ var Entity3D = (function (_super) {
         _super.call(this, p);
     }
     return Entity3D;
+})(Entity);
+var BillboardEntity = (function (_super) {
+    __extends(BillboardEntity, _super);
+    function BillboardEntity(p, tex) {
+        _super.call(this, p);
+        this.d = new vec2(1, 1);
+        this.tex = tex;
+    }
+    BillboardEntity.prototype.draw = function () {
+        var n = this.p.minus(projectPoint(this.p, player.vpa, player.vpb));
+        n.normalize();
+        var a = new vec2(n.y, -n.x).plus(this.p);
+        var b = new vec2(-n.y, n.x).plus(this.p);
+        quad(a, b, this.z, this.z + this.d.y, this.tex);
+    };
+    return BillboardEntity;
 })(Entity);
 var Wall = (function () {
     function Wall() {
@@ -159,6 +181,9 @@ function loaded() {
     crosshair.d = new vec2(.07, .07);
     crosshair.tex = getTex("LB_Crosshair.png");
     guis.push(crosshair);
+
+    var bb = new BillboardEntity(player.p.plus(new vec2(30, 30)), getTex("LB_Bow01.png"));
+    entities.push(bb);
     setInterval(update, 17);
 }
 function update() {
@@ -168,6 +193,8 @@ function update() {
     gl.uniformMatrix4fv(transformPT, false, MakeTransform());
     for (var i = 0; i < sectors.length; i++)
         sectors[i].draw();
+    gl.uniform1f(MultPosition, 1);
+    gl.uniform4f(ColorPosition, 0, 0, 0, 0);
     for (var i = 0; i < entities.length; i++) {
         entities[i].update();
         if (!entities[i].s.pointIsIn(entities[i].p)) {
@@ -175,6 +202,7 @@ function update() {
             if (t != null)
                 entities[i].s = t;
         }
+        entities[i].draw();
     }
     gl.disable(gl.DEPTH_TEST);
     gl.uniform1f(MultPosition, 1);
@@ -433,7 +461,7 @@ function isLeft(a, b, c) {
     return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-    var textures = ["LB_Crosshair.png", 35, 24];
+    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);
