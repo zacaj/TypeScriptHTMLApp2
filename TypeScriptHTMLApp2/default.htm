@@ -19,14 +19,16 @@
 	    }
     </script>
 
-    <script id="FragmentShader" type="x-shader/x-fragment"> 
+        <script id="FragmentShader" type="x-shader/x-fragment"> 
 	    varying highp vec2 vTextureCoord;
 	
 	    uniform sampler2D uSampler;
+            uniform highp vec3 color;
+            uniform highp float texMult;
 	
 	    void main(void) {
 		    highp vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-		    gl_FragColor = texelColor;
+		    gl_FragColor = texelColor*texMult+vec4(color,1);
 	    }     
     </script>
         <meta charset="utf-8" />

@@ -3,9 +3,10 @@
 ///<reference path="player.ts" />
 ///<reference path="math.ts" />
 var gl: WebGLRenderingContext;
-var ShaderProgram, VertexPosition, VertexTexture;
+var ShaderProgramTex,ShaderProgramColor, VertexPositionTex, VertexTexture,MultPosition,ColorPosition;
 var vertBuffer, uvBuffer;
-var perspectiveP: WebGLUniformLocation, transformP: WebGLUniformLocation;
+var perspectivePT: WebGLUniformLocation, transformPT: WebGLUniformLocation;
+var perspectivePC: WebGLUniformLocation, transformPC: WebGLUniformLocation;
 
 class Entity {
     s: Sector;
@@ -42,14 +43,19 @@ class Sector {
     pts: vec2[];
     bottom: number;
     top: number;
-    floorColor: string;
-    ceilingColor: string;
+    floorColor;
+    ceilingColor;
     tris: Triangle[];
-    p: vec2;
+	p: vec2;
+	floorBuffer;
+	ceilingBuffer;
+	uvBuffer;
     pointIsIn(p: vec2): bool {
         return pointInPolygon(p, this.pts);
     }
-    draw() {
+	draw() {
+		gl.uniform1f(MultPosition, 1);
+		gl.uniform3f(ColorPosition, 0,0,0);
         for (var i = 0; i < this.walls.length; i++)
         {
 			var wall = this.walls[i];
@@ -63,8 +69,59 @@ class Sector {
 			}
 			else
 				quad(wall.a, wall.b, this.bottom, this.top, getTex(wall.textureName));
-        }
-    }
+		}
+		gl.uniform1f(MultPosition, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.floorBuffer);
+		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
+		gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
+		gl.uniform3f(ColorPosition, this.floorColor.r, this.floorColor.g, this.floorColor.b);
+		gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.ceilingBuffer);
+		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
+		gl.uniform3f(ColorPosition, this.ceilingColor.r / 255, this.ceilingColor.g / 255, this.ceilingColor.b / 255);
+		gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
+	}
+	createBuffers() {
+		var floorVerts = new Array<number>();
+		var ceilingVerts = new Array<number>();
+		var uvs = new Array<number>();
+		for (var i = 0; i < this.tris.length; i++)
+		{
+			floorVerts.push(this.tris[i].points_[0].x);
+			floorVerts.push(this.bottom);
+			floorVerts.push(this.tris[i].points_[0].y);
+			floorVerts.push(this.tris[i].points_[1].x);
+			floorVerts.push(this.bottom);
+			floorVerts.push(this.tris[i].points_[1].y);
+			floorVerts.push(this.tris[i].points_[2].x);
+			floorVerts.push(this.bottom);
+			floorVerts.push(this.tris[i].points_[2].y);
+			for (var j = 0; j < 6; j++)
+				uvs.push(0);
+			ceilingVerts.push(this.tris[i].points_[0].x);
+			ceilingVerts.push(this.top);
+			ceilingVerts.push(this.tris[i].points_[0].y);
+			ceilingVerts.push(this.tris[i].points_[1].x);
+			ceilingVerts.push(this.top);
+			ceilingVerts.push(this.tris[i].points_[1].y);
+			ceilingVerts.push(this.tris[i].points_[2].x);
+			ceilingVerts.push(this.top);
+			ceilingVerts.push(this.tris[i].points_[2].y);
+		}
+		this.floorBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.floorBuffer);
+		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floorVerts), gl.STATIC_DRAW);
+		this.ceilingBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.ceilingBuffer);
+		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ceilingVerts), gl.STATIC_DRAW);
+		this.uvBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
+		gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uvs), gl.STATIC_DRAW);
+	}
 }
 var sectors: Sector[] = new Array<Sector>();
 function getSector(p: vec2): Sector {
@@ -90,10 +147,9 @@ function loaded() {
     setInterval(update, 17);
 }
 function update() {
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.uniformMatrix4fv(perspectiveP,false,MakePerspective(90, 4 / 3, 1, 1000));
-    gl.uniformMatrix4fv(transformP,false,MakeTransform());
-	//quad(new vec2(-5, -5), new vec2(5, -5), -3, 3, getTex("texture.bmp"));
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniformMatrix4fv(perspectivePT,false,MakePerspective(90, 4 / 3, 1, 1000));
+    gl.uniformMatrix4fv(transformPT,false,MakeTransform());
 	for (var i = 0; i < sectors.length; i++)
 		sectors[i].draw();
     for (var i = 0; i < entities.length; i++)
@@ -108,8 +164,14 @@ function update() {
     }
 }
 function quad(a: vec2, b: vec2, bottom: number, top: number, texId) {
-    gl.bindTexture(gl.TEXTURE_2D,texId);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([a.x, top, a.y, a.x, bottom, a.y, b.x, top, b.y, b.x, bottom, b.y]), gl.STREAM_DRAW);
+	gl.activeTexture(gl.TEXTURE0);  
+	gl.bindTexture(gl.TEXTURE_2D, texId);
+	gl.uniform1i(gl.getUniformLocation(ShaderProgramTex, "uSampler"), 0); 
+	gl.bindBuffer(gl.ARRAY_BUFFER, vertBuffer);
+	gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([a.x, top, a.y, a.x, bottom, a.y, b.x, top, b.y, b.x, bottom, b.y]), gl.STREAM_DRAW);
+	gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+	gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
 var loadedTextures = new Object();
@@ -125,44 +187,49 @@ function initGL() {
     if (!FShader || !VShader)
         alert("Error, Could Not Find Shaders");
     else
-    {
+	{
         //Load and Compile Fragment Shader
-        var Code = LoadShader(FShader);
+        var TCode = LoadShader(FShader);
         FShader = gl.createShader(gl.FRAGMENT_SHADER);
-        gl.shaderSource(FShader, Code);
+        gl.shaderSource(FShader, TCode);
         gl.compileShader(FShader);
 
         //Load and Compile Vertex Shader
-        Code = LoadShader(VShader);
+        var VCode = LoadShader(VShader);
         VShader = gl.createShader(gl.VERTEX_SHADER);
-        gl.shaderSource(VShader, Code);
+        gl.shaderSource(VShader, VCode);
         gl.compileShader(VShader);
 
         //Create The Shader Program
-        ShaderProgram = gl.createProgram();
-        gl.attachShader(ShaderProgram, FShader);
-        gl.attachShader(ShaderProgram, VShader);
-        gl.linkProgram(ShaderProgram);
-        gl.useProgram(ShaderProgram);
+        ShaderProgramTex = gl.createProgram();
+		gl.attachShader(ShaderProgramTex, FShader);
+		gl.attachShader(ShaderProgramTex, VShader);
+		gl.linkProgram(ShaderProgramTex);
+		gl.useProgram(ShaderProgramTex);
 
-        //Link Vertex Position Attribute from Shader
-        VertexPosition = gl.getAttribLocation(this.ShaderProgram, "VertexPosition");
-        gl.enableVertexAttribArray(this.VertexPosition);
+		//Link Vertex Position Attribute from Shader
+		VertexPositionTex = gl.getAttribLocation(ShaderProgramTex, "VertexPosition");
+		gl.enableVertexAttribArray(VertexPositionTex);
 
-        //Link Texture Coordinate Attribute from Shader
-        VertexTexture = gl.getAttribLocation(this.ShaderProgram, "TextureCoord");
-        gl.enableVertexAttribArray(this.VertexTexture);
+		//Link Texture Coordinate Attribute from Shader
+		VertexTexture = gl.getAttribLocation(ShaderProgramTex, "TextureCoord");
+		gl.enableVertexAttribArray(VertexTexture);
 
-        perspectiveP = gl.getUniformLocation(ShaderProgram, "PerspectiveMatrix");
-        transformP = gl.getUniformLocation(ShaderProgram, "TransformationMatrix");
-    }
+        perspectivePT = gl.getUniformLocation(ShaderProgramTex, "PerspectiveMatrix");
+		transformPT = gl.getUniformLocation(ShaderProgramTex, "TransformationMatrix");
+		//Link Texture Coordinate Attribute from Shader
+		ColorPosition = gl.getUniformLocation(ShaderProgramTex, "color");
+		MultPosition = gl.getUniformLocation(ShaderProgramTex, "texMult");
+	
+	}
     uvBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
     gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 1, 0, 0, 1, 1, 1, 0]), gl.STATIC_DRAW);
     vertBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertBuffer);
-    gl.vertexAttribPointer(VertexPosition, 3, gl.FLOAT, false, 0, 0);
+	gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
+
     gl.clearColor(0,0,0, 1);
     gl.enable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
@@ -261,6 +328,15 @@ function otherWallWithPoint(wall: Wall, p: vec2, list?: Wall[], inSector?): Wall
 	}
 	return null;
 }
+function hexToRgb(hex) {
+	var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+	return result ? {
+		r: parseInt(result[1], 16)/256,
+		g: parseInt(result[2], 16)/256,
+		b: parseInt(result[3], 16)/256
+	} : null;
+}
+
 function load(str) {
     var textures: string[] = new Array<string>();
     walls.splice(0, walls.length);
@@ -295,8 +371,8 @@ function load(str) {
         s.bottom = t.x;
         s.top = t.y;
         t = lines[at++].split(',');
-        s.floorColor = t[0];
-        s.ceilingColor = t[1];
+		s.floorColor = hexToRgb(t[0]);
+		s.ceilingColor = hexToRgb(t[1]);
         var nP = parseInt(lines[at++]);
         s.pts = new Array<vec2>();
         for (var j = 0; j < nP; j++)
@@ -348,6 +424,7 @@ function load(str) {
 			s.pts.push(pt);
 			lastWall = wa;
 		}
+		sectors[i].createBuffers();
 	}
     var nEntity = parseInt(lines[at++]);
     for (var i = 0; i < nEntity; i++)
