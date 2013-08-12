@@ -17,9 +17,9 @@ var Player = (function (_super) {
         this.r = 1.5;
     }
     Player.prototype.update = function () {
-        if (key["A"])
+        if (key["Q"])
             this.angle += 5;
-        if (key["D"])
+        if (key["E"])
             this.angle -= 5;
         var n = copyvec2(this.p);
         if (key["W"]) {
@@ -29,6 +29,14 @@ var Player = (function (_super) {
         if (key["S"]) {
             n.x -= Math.cos(this.angle * Math.PI / 180);
             n.y -= Math.sin(this.angle * Math.PI / 180);
+        }
+        if (key["A"]) {
+            n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2);
+            n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2);
+        }
+        if (key["D"]) {
+            n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2);
+            n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2);
         }
         if (key["C"]) {
             this.height = 3;
@@ -54,8 +62,6 @@ var Player = (function (_super) {
                 var wp = projectPoint(n, w.a, w.b);
                 this.p = wp.plus(w.n.scale(this.r));
             } else {
-                if (w.isPortal) {
-                }
                 this.p = n;
             }
         }

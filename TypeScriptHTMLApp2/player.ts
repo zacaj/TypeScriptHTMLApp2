@@ -4,9 +4,9 @@ var player: Player;
 class Player extends Entity3D {
 	height = 5;
     update() {
-        if (key["A"])
+        if (key["Q"])
             this.angle += 5;
-        if (key["D"])
+        if (key["E"])
 			this.angle -= 5;
 		var n = copyvec2(this.p);
         if (key["W"])
@@ -18,6 +18,16 @@ class Player extends Entity3D {
         {
             n.x -= Math.cos(this.angle * Math.PI / 180);
             n.y -= Math.sin(this.angle * Math.PI / 180);
+		}
+		if (key["A"])
+		{
+			n.x += Math.cos(this.angle * Math.PI / 180+Math.PI/2);
+			n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2);
+		}
+		if (key["D"])
+		{
+			n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2);
+			n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2);
 		}
 		if (key["C"])
 		{
@@ -52,11 +62,6 @@ class Player extends Entity3D {
 			}
 			else
 			{
-				if (w.isPortal)
-				{
-					//this.s = w.portal;
-					//this.z = Math.max(this.z,w.portal.bottom + 5);
-				}
 				this.p = n;
 			}
 		}

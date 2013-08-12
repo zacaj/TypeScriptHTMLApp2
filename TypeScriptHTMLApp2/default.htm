@@ -12,10 +12,11 @@
 	    uniform highp mat4 PerspectiveMatrix;
 	
 	    varying highp vec2 vTextureCoord;
+            uniform highp vec2 texScale;
 	
 	    void main(void) {
 		    gl_Position = PerspectiveMatrix * TransformationMatrix * vec4(VertexPosition, 1.0);
-		    vTextureCoord = TextureCoord;
+		    vTextureCoord = TextureCoord*texScale;
 	    }
     </script>
 
@@ -23,12 +24,14 @@
 	    varying highp vec2 vTextureCoord;
 	
 	    uniform sampler2D uSampler;
-            uniform highp vec3 color;
+            uniform highp vec4 color;
             uniform highp float texMult;
 	
 	    void main(void) {
 		    highp vec4 texelColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
-		    gl_FragColor = texelColor*texMult+vec4(color,1);
+		    gl_FragColor = texelColor*texMult+color;
+            if(gl_FragColor.a<.1)
+            discard;
 	    }     
     </script>
         <meta charset="utf-8" />

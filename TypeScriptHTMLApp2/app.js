@@ -7,8 +7,9 @@ var __extends = this.__extends || function (d, b) {
 ///<reference path="WebGL.d.ts" />
 ///<reference path="player.ts" />
 ///<reference path="math.ts" />
+///<reference path="input.ts" />
 var gl;
-var ShaderProgramTex, ShaderProgramColor, VertexPositionTex, VertexTexture, MultPosition, ColorPosition;
+var ShaderProgramTex, ShaderProgramColor, VertexPositionTex, VertexTexture, MultPosition, ColorPosition, ScalePosition;
 var vertBuffer, uvBuffer;
 var perspectivePT, transformPT;
 var perspectivePC, transformPC;
@@ -55,7 +56,7 @@ var Sector = (function () {
     };
     Sector.prototype.draw = function () {
         gl.uniform1f(MultPosition, 1);
-        gl.uniform3f(ColorPosition, 0, 0, 0);
+        gl.uniform4f(ColorPosition, 0, 0, 0, 0);
         for (var i = 0; i < this.walls.length; i++) {
             var wall = this.walls[i];
             if (wall.isPortal) {
@@ -72,11 +73,11 @@ var Sector = (function () {
         gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
         gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
-        gl.uniform3f(ColorPosition, this.floorColor.r, this.floorColor.g, this.floorColor.b);
+        gl.uniform4f(ColorPosition, this.floorColor.r, this.floorColor.g, this.floorColor.b, 1);
         gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.ceilingBuffer);
         gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
-        gl.uniform3f(ColorPosition, this.ceilingColor.r / 255, this.ceilingColor.g / 255, this.ceilingColor.b / 255);
+        gl.uniform4f(ColorPosition, this.ceilingColor.r, this.ceilingColor.g, this.ceilingColor.b, 1);
         gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
     };
     Sector.prototype.createBuffers = function () {
@@ -121,6 +122,18 @@ var Sector = (function () {
     return Sector;
 })();
 var sectors = new Array();
+var GUI = (function () {
+    function GUI() {
+    }
+    GUI.prototype.draw = function () {
+        var a = new vec2(this.p.x - this.d.x / 2, .9);
+        var b = new vec2(this.p.x + this.d.x / 2, .9);
+        quad(a, b, this.p.y - this.d.y, this.p.y + this.d.y, this.tex);
+    };
+    return GUI;
+})();
+var guis = new Array();
+var crosshair;
 function getSector(p) {
     for (var i = 0; i < sectors.length; i++) {
         if (sectors[i].pointIsIn(p))
@@ -129,6 +142,7 @@ function getSector(p) {
     return null;
 }
 window.onload = function () {
+    var canvas = (document.getElementById('canvas'));
     gl = (document.getElementById('canvas')).getContext("webgl");
     if (!gl) {
         gl = (document.getElementById('canvas')).getContext("experimental-webgl");
@@ -136,13 +150,20 @@ window.onload = function () {
             alert("your browser does not support webgl");
     }
     initGL();
+    initInput(canvas);
     load((document.getElementById("frmFile")).contentWindow.document.body.childNodes[0].innerHTML);
 };
 function loaded() {
+    crosshair = new GUI();
+    crosshair.p = new vec2(0, 0);
+    crosshair.d = new vec2(.07, .07);
+    crosshair.tex = getTex("LB_Crosshair.png");
+    guis.push(crosshair);
     setInterval(update, 17);
 }
 function update() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
     gl.uniformMatrix4fv(perspectivePT, false, MakePerspective(90, 4 / 3, 1, 1000));
     gl.uniformMatrix4fv(transformPT, false, MakeTransform());
     for (var i = 0; i < sectors.length; i++)
@@ -155,11 +176,50 @@ function update() {
                 entities[i].s = t;
         }
     }
+    gl.disable(gl.DEPTH_TEST);
+    gl.uniform1f(MultPosition, 1);
+    gl.uniform4f(ColorPosition, 0, 0, 0, 0);
+    gl.uniformMatrix4fv(transformPT, false, [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+    ]);
+    gl.uniformMatrix4fv(perspectivePT, false, [
+        4 / 3 * 2,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+    ]);
+    for (var i = 0; i < guis.length; i++)
+        guis[i].draw();
 }
-function quad(a, b, bottom, top, texId) {
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texId);
-    gl.uniform1i(gl.getUniformLocation(ShaderProgramTex, "uSampler"), 0);
+function quad(a, b, bottom, top, tex) {
+    tex.bind();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertBuffer);
     gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([a.x, top, a.y, a.x, bottom, a.y, b.x, top, b.y, b.x, bottom, b.y]), gl.STREAM_DRAW);
@@ -173,6 +233,18 @@ function getTex(name) {
         return loadedTextures[name];
     alert(name + "is not loaded");
 }
+var Texture = (function () {
+    function Texture() {
+        this.s = new vec2(0, 0);
+    }
+    Texture.prototype.bind = function () {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.id);
+        gl.uniform1i(gl.getUniformLocation(ShaderProgramTex, "uSampler"), 0);
+        gl.uniform2f(ScalePosition, this.s.x, this.s.y);
+    };
+    return Texture;
+})();
 function initGL() {
     var FShader = document.getElementById("FragmentShader");
     var VShader = document.getElementById("VertexShader");
@@ -212,6 +284,7 @@ function initGL() {
         //Link Texture Coordinate Attribute from Shader
         ColorPosition = gl.getUniformLocation(ShaderProgramTex, "color");
         MultPosition = gl.getUniformLocation(ShaderProgramTex, "texMult");
+        ScalePosition = gl.getUniformLocation(ShaderProgramTex, "texScale");
     }
     uvBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
@@ -224,6 +297,7 @@ function initGL() {
     gl.clearColor(0, 0, 0, 1);
     gl.enable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
+    gl.enable(gl.BLEND);
 }
 
 function MakePerspective(FOV, AspectRatio, Closest, Farest) {
@@ -289,6 +363,8 @@ function LoadTexture(names) {
         loaded();
         return;
     }
+    var sx = names[1];
+    var sy = names[2];
     var Img = new Image();
     Img.onload = function () {
         //Create a new Texture and Assign it as the active one
@@ -304,18 +380,29 @@ function LoadTexture(names) {
         //Setup Scaling properties
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         //Unbind the texture and return it.
         gl.bindTexture(gl.TEXTURE_2D, null);
-        loadedTextures[name] = TempTex;
+        var tex = new Texture();
+        tex.id = TempTex;
+        tex.name = name;
+        tex.w = Img.width;
+        tex.h = Img.height;
+        if (sx == 0)
+            tex.s.x = 1; else
+            tex.s.x = sx / tex.w;
+        if (sy == 0)
+            tex.s.y = 1; else
+            tex.s.y = sy / tex.h;
+        loadedTextures[name] = tex;
         LoadTexture(names);
     };
     Img.onerror = function () {
         alert("error");
     };
     var name = names[0];
-    names.splice(0, 1);
+    names.splice(0, 3);
     Img.src = name;
 }
 ;
@@ -346,7 +433,7 @@ function isLeft(a, b, c) {
     return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-    var textures = new Array();
+    var textures = ["LB_Crosshair.png", 35, 24];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);
@@ -359,8 +446,11 @@ function load(str) {
         wall.b = getVec2(lines[i * 4 + 1 + 1]);
         (wall).t = getVec2(lines[i * 4 + 2 + 1]);
         wall.textureName = lines[i * 4 + 3 + 1].split(',')[1];
-        if (textures.indexOf(wall.textureName) == -1)
+        if (textures.indexOf(wall.textureName) == -1) {
             textures.push(wall.textureName);
+            textures.push(0);
+            textures.push(0);
+        }
         walls.push(wall);
     }
     var at = nWall * 4 + 1;
