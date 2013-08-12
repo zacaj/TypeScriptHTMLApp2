@@ -11,7 +11,8 @@ var perspectivePC: WebGLUniformLocation, transformPC: WebGLUniformLocation;
 class Entity {
     s: Sector;
     p: vec2;
-    z: number;
+	z: number;
+	r: number = 1;
     update() { }
     constructor(p: vec2) {
         this.z = 0;
@@ -35,7 +36,8 @@ class Wall {
     portal: Sector = null;
     isPortal: bool = false;
     left: Wall = null;
-    right: Wall = null;
+	right: Wall = null;
+	n: vec2;
 }
 var walls: Wall[] = new Array<Wall>();
 class Sector {
@@ -50,6 +52,8 @@ class Sector {
 	floorBuffer;
 	ceilingBuffer;
 	uvBuffer;
+	sectors: Sector[]=new Array<Sector>();
+	extendedWalls: Wall[]=new Array<Wall>();
     pointIsIn(p: vec2): bool {
         return pointInPolygon(p, this.pts);
     }
@@ -336,7 +340,9 @@ function hexToRgb(hex) {
 		b: parseInt(result[3], 16)/256
 	} : null;
 }
-
+function isLeft(a,b,c):bool {
+	return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
+}
 function load(str) {
     var textures: string[] = new Array<string>();
     walls.splice(0, walls.length);
@@ -353,7 +359,7 @@ function load(str) {
         (<any>wall).t = getVec2(lines[i * 4 + 2 + 1]);
         wall.textureName = lines[i * 4 + 3 + 1].split(',')[1];
         if (textures.indexOf(wall.textureName) == -1)
-            textures.push(wall.textureName);
+			textures.push(wall.textureName);
         walls.push(wall);
     }
     var at = nWall * 4 + 1;
@@ -388,6 +394,7 @@ function load(str) {
         }
         s.p = getVec2(lines[at++]);
 		sectors.push(s);
+		s.extendedWalls=s.extendedWalls.concat(s.walls);
 
     }
     for (var i = 0; i < walls.length; i++)
@@ -397,8 +404,24 @@ function load(str) {
         if (t.y != -1)
         {
             walls[i].portal = sectors[t.y];
-            walls[i].isPortal = true;
-        }
+			walls[i].isPortal = true;
+			if (walls[i].s.sectors.indexOf(sectors[t.y]) == -1)
+			{
+				walls[i].s.sectors.push(sectors[t.y]);
+				walls[i].s.extendedWalls=walls[i].s.extendedWalls.concat(sectors[t.y].walls);
+			}
+		}
+		var wall = walls[i];
+		var dir = wall.b.minus(wall.a);
+		dir.normalize();
+		var n = new vec2(-dir.y, dir.x);
+		var pt = wall.a.plus(n);
+		if (!wall.s.pointIsIn(pt))
+		{
+			n.x = -n.x;
+			n.y = -n.y;
+		}
+		wall.n = n;
 	}
 	for (var i = 0; i < sectors.length; i++)
 	{

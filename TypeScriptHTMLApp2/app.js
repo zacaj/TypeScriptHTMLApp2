@@ -15,6 +15,7 @@ var perspectivePC, transformPC;
 
 var Entity = (function () {
     function Entity(p) {
+        this.r = 1;
         this.z = 0;
         this.p = (p);
         this.s = getSector(this.p);
@@ -46,6 +47,8 @@ var Wall = (function () {
 var walls = new Array();
 var Sector = (function () {
     function Sector() {
+        this.sectors = new Array();
+        this.extendedWalls = new Array();
     }
     Sector.prototype.pointIsIn = function (p) {
         return pointInPolygon(p, this.pts);
@@ -69,7 +72,7 @@ var Sector = (function () {
         gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
         gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
-        gl.uniform3f(ColorPosition, this.floorColor.r / 255, this.floorColor.g / 255, this.floorColor.b / 255);
+        gl.uniform3f(ColorPosition, this.floorColor.r, this.floorColor.g, this.floorColor.b);
         gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.ceilingBuffer);
         gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
@@ -353,12 +356,14 @@ function otherWallWithPoint(wall, p, list, inSector) {
 function hexToRgb(hex) {
     var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
+        r: parseInt(result[1], 16) / 256,
+        g: parseInt(result[2], 16) / 256,
+        b: parseInt(result[3], 16) / 256
     } : null;
 }
-
+function isLeft(a, b, c) {
+    return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
+}
 function load(str) {
     var textures = new Array();
     walls.splice(0, walls.length);
@@ -406,6 +411,7 @@ function load(str) {
         }
         s.p = getVec2(lines[at++]);
         sectors.push(s);
+        s.extendedWalls = s.extendedWalls.concat(s.walls);
     }
     for (var i = 0; i < walls.length; i++) {
         var t = (walls[i]).t;
@@ -413,7 +419,21 @@ function load(str) {
         if (t.y != -1) {
             walls[i].portal = sectors[t.y];
             walls[i].isPortal = true;
+            if (walls[i].s.sectors.indexOf(sectors[t.y]) == -1) {
+                walls[i].s.sectors.push(sectors[t.y]);
+                walls[i].s.extendedWalls = walls[i].s.extendedWalls.concat(sectors[t.y].walls);
+            }
         }
+        var wall = walls[i];
+        var dir = wall.b.minus(wall.a);
+        dir.normalize();
+        var n = new vec2(-dir.y, dir.x);
+        var pt = wall.a.plus(n);
+        if (!wall.s.pointIsIn(pt)) {
+            n.x = -n.x;
+            n.y = -n.y;
+        }
+        wall.n = n;
     }
     for (var i = 0; i < sectors.length; i++) {
         s.pts.splice(0, s.pts.length);

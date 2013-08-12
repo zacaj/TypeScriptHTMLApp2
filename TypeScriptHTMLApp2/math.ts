@@ -8,7 +8,25 @@
     dist(p: vec2): number {
         var d: vec2 = new vec2(p.x - this.x, p.y - this.y);
         return Math.sqrt(d.x * d.x + d.y * d.y);
-    }
+	}
+	minus(v: vec2): vec2 {
+		var r = new vec2(this.x - v.x, this.y - v.y);
+		return r;
+	}
+	plus(v: vec2): vec2 {
+		return new vec2(this.x + v.x, this.y + v.y);
+	}
+	magnitude(): number {
+		return Math.sqrt(this.x * this.x + this.y * this.y);
+	}
+	normalize() {
+		var m = this.magnitude();
+		this.x /= m;
+		this.y /= m;
+	}
+	scale(n: number): vec2 {
+		return new vec2(this.x * n, this.y * n);
+	}
 }
 function copyvec2(p: vec2) {
     return new vec2(p.x, p.y);
@@ -152,4 +170,29 @@ function transpose(m:number[]):number[]
 	r[14]=m[11];
 	r[15]=m[15];
     return r;
-   }
+}
+function sqr(x) { return x * x }
+function dist2(v, w) { return sqr(v.x - w.x) + sqr(v.y - w.y) }
+function distToSegmentSquared(p, v, w) {
+	var l2 = dist2(v, w);
+	if (l2 == 0) return dist2(p, v);
+	var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+	if (t < 0) return dist2(p, v);
+	if (t > 1) return dist2(p, w);
+	return dist2(p, {
+		x: v.x + t * (w.x - v.x),
+		y: v.y + t * (w.y - v.y)
+	});
+}
+function distToSegment(p, v, w) { return Math.sqrt(distToSegmentSquared(p, v, w)); }
+function projectPoint(p: vec2, v: vec2, w: vec2): vec2 {
+	var l2 = dist2(v, w);
+	if (l2 == 0) return copyvec2(v);
+	var t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+	if (t < 0) return copyvec2(v);
+	if (t > 1) return copyvec2(w);
+	return new vec2(
+		 v.x + t * (w.x - v.x),
+		 v.y + t * (w.y - v.y)
+	);
+}
