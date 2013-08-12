@@ -4,7 +4,7 @@
 ///<reference path="math.ts" />
 ///<reference path="input.ts" />
 var gl: WebGLRenderingContext;
-var ShaderProgramTex,ShaderProgramColor, VertexPositionTex, VertexTexture,MultPosition,ColorPosition,ScalePosition;
+var ShaderProgramTex,ShaderProgramColor, VertexPositionTex, VertexTexture,MultPosition,ColorPosition,ScalePosition,TranPosition;
 var vertBuffer, uvBuffer;
 var perspectivePT: WebGLUniformLocation, transformPT: WebGLUniformLocation;
 var perspectivePC: WebGLUniformLocation, transformPC: WebGLUniformLocation;
@@ -28,11 +28,37 @@ class Entity {
 }
 var entities: Entity[] = new Array<Entity>();
 class Entity3D extends Entity {
-    angle: number;
-    constructor(p:vec2) {
+	angle: number;
+	tex: Texture;
+	nSide: number;
+	d: vec2 = new vec2(10, 10);
+	constructor(p: vec2) {
+		super(p);
         this.angle = 0;
-        super(p);
-    }
+	}
+	draw() {
+		var n = this.p.minus(projectPoint(this.p, player.vpa, player.vpb));
+		n.normalize();
+		n = n.scale(this.d.x / 2);
+		var a = new vec2(n.y, -n.x).plus(this.p);
+		var b = new vec2(-n.y, n.x).plus(this.p);
+		n = this.p.minus(player.p);
+		n.normalize();
+		var a2p = Math.atan2(n.y, n.x); n = n.scale(this.d.x / 2);
+
+		a2p += Math.PI * 2 / this.nSide / 2;
+		if (a2p < 0)
+			a2p += Math.PI * 2;
+		if (a2p >= Math.PI * 2)
+			a2p -= Math.PI * 2;
+		a2p /= Math.PI * 2;
+		a2p *= this.nSide;
+		a2p = Math.floor(a2p);
+		a2p /= this.nSide;
+		gl.uniform2f(TranPosition, a2p, 0);
+		quad(b, a, this.z, this.z + this.d.y, this.tex);
+		gl.uniform2f(TranPosition, 0, 0);
+	}
 }
 class BillboardEntity extends Entity {
 	tex: Texture;
@@ -44,9 +70,10 @@ class BillboardEntity extends Entity {
 	draw() {
 		var n = this.p.minus(projectPoint(this.p,player.vpa,player.vpb));
 		n.normalize();
+		n =n.scale(this.d.x / 1);
 		var a = new vec2(n.y, -n.x).plus(this.p);
 		var b = new vec2(-n.y, n.x).plus(this.p);
-		quad(a, b, this.z, this.z + this.d.y, this.tex);
+		quad(b, a, this.z, this.z + this.d.y, this.tex);
 	}
 }
 class Wall {
@@ -190,6 +217,11 @@ function loaded() {
 	
 	var bb = new BillboardEntity(player.p.plus(new vec2(30, 30)), getTex("LB_Bow01.png"));
 	entities.push(bb);
+
+	var en = new Entity3D(player.p.plus(new vec2(10, 0)));
+	en.tex = getTex("LB_SS_NPC01.png");
+	en.nSide = 8;
+	entities.push(en);
     setInterval(update, 17);
 }
 function update() {
@@ -296,6 +328,7 @@ function initGL() {
 		ColorPosition = gl.getUniformLocation(ShaderProgramTex, "color");
 		MultPosition = gl.getUniformLocation(ShaderProgramTex, "texMult");
 		ScalePosition = gl.getUniformLocation(ShaderProgramTex, "texScale");
+		TranPosition = gl.getUniformLocation(ShaderProgramTex, "texTran");
 	
 	}
     uvBuffer = gl.createBuffer();
@@ -425,7 +458,7 @@ function isLeft(a,b,c):bool {
 	return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208];
+	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);

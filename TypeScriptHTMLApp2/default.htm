@@ -2,7 +2,7 @@
 
 <html lang="en">
     <head>
-    <script id="VertexShader" type="x-shader/x-vertex">
+        <script id="VertexShader" type="x-shader/x-vertex">
   
 	    attribute highp vec3 VertexPosition;
 	    attribute highp vec2 TextureCoord;
@@ -13,10 +13,11 @@
 	
 	    varying highp vec2 vTextureCoord;
             uniform highp vec2 texScale;
+            uniform highp vec2 texTran;
 	
 	    void main(void) {
 		    gl_Position = PerspectiveMatrix * TransformationMatrix * vec4(VertexPosition, 1.0);
-		    vTextureCoord = TextureCoord*texScale;
+		    vTextureCoord = TextureCoord*texScale+texTran;
 	    }
     </script>
 

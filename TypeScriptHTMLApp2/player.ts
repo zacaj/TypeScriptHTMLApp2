@@ -74,7 +74,9 @@ class Player extends Entity3D {
 		this.vpa.y = this.p.y+Math.sin(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
 		this.vpb.x=this.p.x+Math.cos(this.angle * Math.PI / 180 - Math.PI / 2)*10000;
 		this.vpb.y = this.p.y+Math.sin(this.angle * Math.PI / 180 - Math.PI / 2)*10000;
-    }
+	}
+	draw() {
+	}
     constructor(p:vec2) {
         super(p);
         player = this;

@@ -74,6 +74,8 @@ var Player = (function (_super) {
         this.vpb.x = this.p.x + Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
         this.vpb.y = this.p.y + Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
     };
+    Player.prototype.draw = function () {
+    };
     return Player;
 })(Entity3D);
 //@ sourceMappingURL=player.js.map
