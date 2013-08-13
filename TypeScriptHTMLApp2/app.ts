@@ -158,11 +158,11 @@ function loaded() {
 	en.angle = 45;
 	entities.push(en);
 
-	var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
+	/*var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
 	ar.tex = getTex("arrowlevel.png");
 	ar.nSide = 16;
 	ar.angle = 45;
-	entities.push(ar);
+	entities.push(ar);*/
     setInterval(update, 17);
 }
 function update() {
@@ -396,7 +396,7 @@ function isLeft(a,b,c):bool {
 	return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0,"arrowlevel.png",256,0];
+	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0,"arrows.png",256,256];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);

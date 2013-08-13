@@ -55,6 +55,7 @@ class Entity3D extends Entity {
 	angle: number;
 	tex: Texture;
 	nSide: number;
+	verticalTrans: number = 0;
 	d: vec2 = new vec2(10, 10);
 	constructor(p: vec2) {
 		super(p);
@@ -79,7 +80,7 @@ class Entity3D extends Entity {
 		a2p *= this.nSide;
 		a2p = Math.floor(a2p);
 		a2p /= this.nSide;
-		gl.uniform2f(TranPosition, a2p, 0);
+		gl.uniform2f(TranPosition, a2p, this.verticalTrans);
 		quad(b, a, this.z, this.z + this.d.y, this.tex);
 		gl.uniform2f(TranPosition, 0, 0);
 	}
@@ -118,7 +119,7 @@ class Arrow extends Entity3D {
 		this.v = new vec2(0, 0);
 		this.v.x = x * Math.cos(yaw) - y * Math.sin(yaw);
 		this.v.y = x * Math.sin(yaw) + y * Math.cos(yaw);
-		this.tex=getTex("arrowlevel.png");
+		this.tex=getTex("arrows.png");
 		this.nSide = 16;
 		this.z = z;
 		this.v.scale(.06);
@@ -129,6 +130,20 @@ class Arrow extends Entity3D {
 		{
 			this.z += this.vz;
 			this.vz += -.024;
+			
+			var p = Math.abs(this.vz) / Math.sqrt(this.v.x * this.v.x + this.v.y * this.v.y + this.vz * this.vz);
+			var i;
+			if (p > .99)
+				i = 0;
+			else if (p > .8)
+				i = 1;
+			else if (p > .45)
+				i = 2;
+			else i = 3;
+			if (this.vz>=0)
+				i = 6 - i;
+			this.verticalTrans = i * .125;
+
 			var n = this.p.plus(this.v);
 			if (this.collideWithWalls(n) == true)
 				this.stuck = true;
