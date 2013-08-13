@@ -196,3 +196,22 @@ function projectPoint(p: vec2, v: vec2, w: vec2): vec2 {
 		 v.y + t * (w.y - v.y)
 	);
 }
+function makeOrtho(left, right, bottom, top, zNear, zFar) {
+	var m = [1, 0, 0, 0
+		, 0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1];
+	m[0] = 2 / (right - left);
+	m[4] = m[8] = 0;
+	m[3] = -(right + left) / (right - left);
+	m[1] = 0;
+	m[5] = 2 / (top - bottom);
+	m[9] = 0;
+	m[7] = -(top + bottom) / (top - bottom);
+	m[2] = m[6] = 0;
+	m[10] = -2 / (zFar - zNear);
+	m[11] = -(zFar + zNear) / (zFar - zNear);
+	m[12] = m[13] = m[14] = 0;
+	m[15] = 1;
+	return transpose(m);
+}

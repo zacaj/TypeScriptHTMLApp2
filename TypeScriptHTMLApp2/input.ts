@@ -1,6 +1,6 @@
 ﻿var key = new Object();
 ///<reference path="player.ts" />
-
+var aiming = false;
 window.onkeydown=function(e)
 {
     key[String.fromCharCode(e.keyCode)]=true;
@@ -19,7 +19,29 @@ function monmousemove(e: MouseEvent) {
 		(<any>e).mozMovementY ||
 		(<any>e).webkitMovementY ||
 		0;
-	player.angle -= movementX*.6;
+	if (aiming == true)
+	{
+		crosshair.p.x += movementX * .9;
+		crosshair.p.y += movementY * .9;
+		if (crosshair.p.x < 0)
+		{
+			player.angle += -(crosshair.p.x) / .9 * .008;
+			crosshair.p.x = 0;
+		}
+		if (crosshair.p.x >1024)
+		{
+			player.angle -= (crosshair.p.x-1024) / .9 * .008;
+			crosshair.p.x = 1024;
+		}
+		if (crosshair.p.y < 0)
+			crosshair.p.y = 0;
+		if (crosshair.p.y > 768)
+			crosshair.p.y = 768;
+	}
+	else
+	{
+		player.angle -= movementX * .6;
+	}
 }
 var locked: bool = false;
 function monmousedown(e: MouseEvent) {
@@ -46,7 +68,7 @@ function monmousedown(e: MouseEvent) {
 	}
 	else if (e.button == 2)
 	{
-
+		aiming = true;
 	}
 }
 function monmouseup(e: MouseEvent) {
@@ -58,7 +80,8 @@ function monmouseup(e: MouseEvent) {
 	}
 	else if (e.button == 2)
 	{
-
+		aiming = false;
+		crosshair.p = new vec2(1024/2, 768/2);
 	}
 }
 function moncontextmenu(e: MouseEvent) {

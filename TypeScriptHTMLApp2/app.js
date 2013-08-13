@@ -1,12 +1,7 @@
-var __extends = this.__extends || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    __.prototype = b.prototype;
-    d.prototype = new __();
-};
 ///<reference path="WebGL.d.ts" />
 ///<reference path="player.ts" />
 ///<reference path="math.ts" />
+///<reference path="entity.ts" />
 ///<reference path="input.ts" />
 var gl;
 var ShaderProgramTex, ShaderProgramColor, VertexPositionTex, VertexTexture, MultPosition, ColorPosition, ScalePosition, TranPosition;
@@ -14,74 +9,6 @@ var vertBuffer, uvBuffer;
 var perspectivePT, transformPT;
 var perspectivePC, transformPC;
 
-var Entity = (function () {
-    function Entity(p) {
-        this.r = 1;
-        this.gravity = .3;
-        this.z = 0;
-        this.p = (p);
-        this.s = getSector(this.p);
-    }
-    Entity.prototype.update = function () {
-        if (this.z - this.s.bottom > this.gravity)
-            this.z -= this.gravity;
-    };
-
-    Entity.prototype.draw = function () {
-    };
-    return Entity;
-})();
-var entities = new Array();
-var Entity3D = (function (_super) {
-    __extends(Entity3D, _super);
-    function Entity3D(p) {
-        _super.call(this, p);
-        this.d = new vec2(10, 10);
-        this.angle = 0;
-    }
-    Entity3D.prototype.draw = function () {
-        var n = this.p.minus(projectPoint(this.p, player.vpa, player.vpb));
-        n.normalize();
-        n = n.scale(this.d.x / 2);
-        var a = new vec2(n.y, -n.x).plus(this.p);
-        var b = new vec2(-n.y, n.x).plus(this.p);
-        n = this.p.minus(player.p);
-        n.normalize();
-        var a2p = Math.atan2(n.y, n.x);
-        n = n.scale(this.d.x / 2);
-
-        a2p += Math.PI * 2 / this.nSide / 2;
-        if (a2p < 0)
-            a2p += Math.PI * 2;
-        if (a2p >= Math.PI * 2)
-            a2p -= Math.PI * 2;
-        a2p /= Math.PI * 2;
-        a2p *= this.nSide;
-        a2p = Math.floor(a2p);
-        a2p /= this.nSide;
-        gl.uniform2f(TranPosition, a2p, 0);
-        quad(b, a, this.z, this.z + this.d.y, this.tex);
-        gl.uniform2f(TranPosition, 0, 0);
-    };
-    return Entity3D;
-})(Entity);
-var BillboardEntity = (function (_super) {
-    __extends(BillboardEntity, _super);
-    function BillboardEntity(p, tex) {
-        _super.call(this, p);
-        this.d = new vec2(1, 1);
-        this.tex = tex;
-    }
-    BillboardEntity.prototype.draw = function () {
-        var n = this.p.minus(projectPoint(this.p, player.vpa, player.vpb));
-        n.normalize();
-        n = n.scale(this.d.x / 1);
-        var a = new vec2(n.y, -n.x).plus(this.p);
-        var b = new vec2(-n.y, n.x).plus(this.p);
-        quad(b, a, this.z, this.z + this.d.y, this.tex);
-    };
-    return BillboardEntity;
-})(Entity);
 var Wall = (function () {
     function Wall() {
         this.s = null;
@@ -176,7 +103,7 @@ var GUI = (function () {
     GUI.prototype.draw = function () {
         var a = new vec2(this.p.x - this.d.x / 2, .9);
         var b = new vec2(this.p.x + this.d.x / 2, .9);
-        quad(a, b, this.p.y - this.d.y, this.p.y + this.d.y, this.tex);
+        quad(a, b, this.p.y - this.d.y / 2, this.p.y + this.d.y / 2, this.tex);
     };
     return GUI;
 })();
@@ -203,8 +130,8 @@ window.onload = function () {
 };
 function loaded() {
     crosshair = new GUI();
-    crosshair.p = new vec2(0, 0);
-    crosshair.d = new vec2(.07, .07);
+    crosshair.p = new vec2(1024 / 2, 768 / 2);
+    crosshair.d = new vec2(35 * 2, 24 * 2);
     crosshair.tex = getTex("LB_Crosshair.png");
     guis.push(crosshair);
 
@@ -214,7 +141,13 @@ function loaded() {
     var en = new Entity3D(player.p.plus(new vec2(10, 0)));
     en.tex = getTex("LB_SS_NPC01.png");
     en.nSide = 8;
+    en.angle = 0;
     entities.push(en);
+
+    var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
+    ar.tex = getTex("arrowlevel.png");
+    ar.nSide = 8;
+    entities.push(ar);
     setInterval(update, 17);
 }
 function update() {
@@ -256,24 +189,7 @@ function update() {
         0,
         1
     ]);
-    gl.uniformMatrix4fv(perspectivePT, false, [
-        4 / 3 * 2,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        0,
-        1
-    ]);
+    gl.uniformMatrix4fv(perspectivePT, false, makeOrtho(0, 1024, 768, 0, -1, 1));
     for (var i = 0; i < guis.length; i++)
         guis[i].draw();
 }
@@ -493,7 +409,7 @@ function isLeft(a, b, c) {
     return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_SS_NPC01.png", 128, 0];
+    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_SS_NPC01.png", 128, 0, "arrowlevel.png", 256, 0];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);

@@ -1,35 +1,42 @@
 ///<reference path="app.ts" />
 ///<reference path="input.ts" />
+///<reference path="entity.ts" />
 var player: Player;
 class Player extends Entity3D {
 	height = 5;
 	vpa: vec2=new vec2(0,0);//view plane
 	vpb: vec2=new vec2(0,0);
-    update() {
-        if (key["Q"])
-            this.angle += 5;
-        if (key["E"])
-			this.angle -= 5;
+	update() {
+		if (aiming == false)
+		{
+			if (key["Q"])
+				this.angle += 5;
+			if (key["E"])
+				this.angle -= 5;
+		}
 		var n = copyvec2(this.p);
+		var aimScale = 1;
+		if (aiming == true)
+			aimScale = .03;
         if (key["W"])
         {
-            n.x += Math.cos(this.angle * Math.PI / 180);
-            n.y += Math.sin(this.angle * Math.PI / 180);
+            n.x += Math.cos(this.angle * Math.PI / 180)*aimScale;
+			n.y += Math.sin(this.angle * Math.PI / 180) * aimScale;
         }
         if (key["S"])
         {
-            n.x -= Math.cos(this.angle * Math.PI / 180);
-            n.y -= Math.sin(this.angle * Math.PI / 180);
+			n.x -= Math.cos(this.angle * Math.PI / 180) * aimScale;
+			n.y -= Math.sin(this.angle * Math.PI / 180) * aimScale;
 		}
 		if (key["A"])
 		{
-			n.x += Math.cos(this.angle * Math.PI / 180+Math.PI/2);
-			n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2);
+			n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
+			n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
 		}
 		if (key["D"])
 		{
-			n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2);
-			n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2);
+			n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
+			n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
 		}
 		if (key["C"])
 		{
@@ -39,35 +46,8 @@ class Player extends Entity3D {
 		{
 			this.height = 5;
 		}
-		var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
-		var md = dp.dist(new vec2(0, 0));
-		if (md > .00000000001)
-		{
-			var sd = 999999;
-			var w: Wall;
-			for (var i = 0; i < this.s.extendedWalls.length; i++)
-			{
-				var d = distToSegmentSquared(n, this.s.extendedWalls[i].a, this.s.extendedWalls[i].b);
-				if (d < sd)
-				{
-					sd = d;
-					w = this.s.extendedWalls[i];
-				}
-			}
-
-			if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom-this.z   > 2.1) || w.isPortal==false))
-			{
-				sd = Math.sqrt(sd);
-				var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
-				var wp = projectPoint(n, w.a, w.b);
-				this.p = wp.plus(w.n.scale(this.r));
-			}
-			else
-			{
-				this.p = n;
-			}
-		}
-		else if (this.z - this.s.bottom < -.3)
+		this.collideWithWalls(n);
+		if (this.z - this.s.bottom < -.3)
 			this.z += .3;
 		super.update();
 		this.vpa.x=this.p.x+Math.cos(this.angle * Math.PI / 180 + Math.PI / 2)*10000;

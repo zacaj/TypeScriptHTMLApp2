@@ -2,6 +2,7 @@
 ///<reference path="WebGL.d.ts" />
 ///<reference path="player.ts" />
 ///<reference path="math.ts" />
+///<reference path="entity.ts" />
 ///<reference path="input.ts" />
 var gl: WebGLRenderingContext;
 var ShaderProgramTex,ShaderProgramColor, VertexPositionTex, VertexTexture,MultPosition,ColorPosition,ScalePosition,TranPosition;
@@ -9,73 +10,6 @@ var vertBuffer, uvBuffer;
 var perspectivePT: WebGLUniformLocation, transformPT: WebGLUniformLocation;
 var perspectivePC: WebGLUniformLocation, transformPC: WebGLUniformLocation;
 
-class Entity {
-    s: Sector;
-    p: vec2;
-	z: number;
-	r: number = 1;
-	gravity = .3;
-	update() {
-		if (this.z - this.s.bottom > this.gravity)
-			this.z -= this.gravity;
-	}
-    constructor(p: vec2) {
-        this.z = 0;
-        this.p = (p);
-        this.s = getSector(this.p);
-	}
-	draw() { }
-}
-var entities: Entity[] = new Array<Entity>();
-class Entity3D extends Entity {
-	angle: number;
-	tex: Texture;
-	nSide: number;
-	d: vec2 = new vec2(10, 10);
-	constructor(p: vec2) {
-		super(p);
-        this.angle = 0;
-	}
-	draw() {
-		var n = this.p.minus(projectPoint(this.p, player.vpa, player.vpb));
-		n.normalize();
-		n = n.scale(this.d.x / 2);
-		var a = new vec2(n.y, -n.x).plus(this.p);
-		var b = new vec2(-n.y, n.x).plus(this.p);
-		n = this.p.minus(player.p);
-		n.normalize();
-		var a2p = Math.atan2(n.y, n.x); n = n.scale(this.d.x / 2);
-
-		a2p += Math.PI * 2 / this.nSide / 2;
-		if (a2p < 0)
-			a2p += Math.PI * 2;
-		if (a2p >= Math.PI * 2)
-			a2p -= Math.PI * 2;
-		a2p /= Math.PI * 2;
-		a2p *= this.nSide;
-		a2p = Math.floor(a2p);
-		a2p /= this.nSide;
-		gl.uniform2f(TranPosition, a2p, 0);
-		quad(b, a, this.z, this.z + this.d.y, this.tex);
-		gl.uniform2f(TranPosition, 0, 0);
-	}
-}
-class BillboardEntity extends Entity {
-	tex: Texture;
-	d: vec2 = new vec2(1, 1);
-	constructor(p: vec2, tex: Texture) {
-		super(p);
-		this.tex = tex;
-	}
-	draw() {
-		var n = this.p.minus(projectPoint(this.p,player.vpa,player.vpb));
-		n.normalize();
-		n =n.scale(this.d.x / 1);
-		var a = new vec2(n.y, -n.x).plus(this.p);
-		var b = new vec2(-n.y, n.x).plus(this.p);
-		quad(b, a, this.z, this.z + this.d.y, this.tex);
-	}
-}
 class Wall {
     a: vec2;
     b: vec2;
@@ -183,7 +117,7 @@ class GUI {
 	draw() {
 		var a = new vec2(this.p.x-this.d.x/2, .9);
 		var b = new vec2(this.p.x + this.d.x/2, .9);
-		quad(a, b, this.p.y - this.d.y, this.p.y+this.d.y, this.tex);
+		quad(a, b, this.p.y - this.d.y/2, this.p.y+this.d.y/2, this.tex);
 	}
 }
 var guis: GUI[] = new Array<GUI>();
@@ -210,8 +144,8 @@ window.onload = () => {
 };
 function loaded() {
 	crosshair = new GUI();
-	crosshair.p = new vec2(0, 0);
-	crosshair.d = new vec2(.07, .07);
+	crosshair.p = new vec2(1024/2, 768/2);
+	crosshair.d = new vec2(35*2, 24*2);
 	crosshair.tex = getTex("LB_Crosshair.png");
 	guis.push(crosshair);
 	
@@ -221,7 +155,13 @@ function loaded() {
 	var en = new Entity3D(player.p.plus(new vec2(10, 0)));
 	en.tex = getTex("LB_SS_NPC01.png");
 	en.nSide = 8;
+	en.angle = 0;
 	entities.push(en);
+
+	var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
+	ar.tex = getTex("arrowlevel.png");
+	ar.nSide = 8;
+	entities.push(ar);
     setInterval(update, 17);
 }
 function update() {
@@ -252,10 +192,7 @@ function update() {
 		0, 0, 1, 0,
 		0, 0, 0, 1]);
 	gl.uniformMatrix4fv(perspectivePT, false,
-		[4/3*2, 0, 0, 0
-			, 0, 1, 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, 1]);
+		makeOrtho(0,1024,768,0,-1,1));
 	for (var i = 0; i < guis.length; i++)
 		guis[i].draw();
 }
@@ -458,7 +395,7 @@ function isLeft(a,b,c):bool {
 	return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0];
+	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0,"arrowlevel.png",256,0];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);
