@@ -40,8 +40,10 @@ var Entity = (function () {
                 var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
                 var wp = projectPoint(n, w.a, w.b);
                 this.p = wp.plus(w.n.scale(this.r));
+                return true;
             } else {
                 this.p = n;
+                return false;
             }
         }
     };
@@ -99,4 +101,44 @@ var BillboardEntity = (function (_super) {
     };
     return BillboardEntity;
 })(Entity);
+var Arrow = (function (_super) {
+    __extends(Arrow, _super);
+    function Arrow(yaw, pitch, p, z) {
+        _super.call(this, p);
+        this.stuck = false;
+        this.angle = -yaw;
+        yaw = yaw * Math.PI / 180;
+        pitch = pitch * Math.PI / 180;
+        this.gravity = 0;
+        var x = Math.cos(pitch);
+        this.vz = Math.sin(pitch);
+        var y = 0;
+        this.v = new vec2(0, 0);
+        this.v.x = x * Math.cos(yaw) - y * Math.sin(yaw);
+        this.v.y = x * Math.sin(yaw) + y * Math.cos(yaw);
+        this.tex = getTex("arrowlevel.png");
+        this.nSide = 16;
+        this.z = z;
+        this.v.scale(.06);
+        this.vz *= .8;
+    }
+    Arrow.prototype.update = function () {
+        if (this.stuck == false) {
+            this.z += this.vz;
+            this.vz += -.024;
+            var n = this.p.plus(this.v);
+            if (this.collideWithWalls(n) == true)
+                this.stuck = true;
+            if (this.z + this.d.y * .125 + this.d.y * .875 / 2 < this.s.bottom) {
+                this.z = this.s.bottom - this.d.y * .875 / 2;
+                this.stuck = true;
+            }
+            if (this.z - this.d.y * .875 / 2 > this.s.top) {
+                this.z = this.s.top + this.d.y * .875 / 2;
+                this.stuck = true;
+            }
+        }
+    };
+    return Arrow;
+})(Entity3D);
 //@ sourceMappingURL=entity.js.map

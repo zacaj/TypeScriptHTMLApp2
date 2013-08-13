@@ -155,12 +155,13 @@ function loaded() {
 	var en = new Entity3D(player.p.plus(new vec2(10, 0)));
 	en.tex = getTex("LB_SS_NPC01.png");
 	en.nSide = 8;
-	en.angle = 0;
+	en.angle = 45;
 	entities.push(en);
 
 	var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
 	ar.tex = getTex("arrowlevel.png");
-	ar.nSide = 8;
+	ar.nSide = 16;
+	ar.angle = 45;
 	entities.push(ar);
     setInterval(update, 17);
 }

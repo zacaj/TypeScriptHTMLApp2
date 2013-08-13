@@ -41,6 +41,7 @@ class Player extends Entity3D {
 		if (key["C"])
 		{
 			this.height = 3;
+			n.x += 1;
 		}
 		else
 		{
@@ -53,7 +54,7 @@ class Player extends Entity3D {
 		this.vpa.x=this.p.x+Math.cos(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
 		this.vpa.y = this.p.y+Math.sin(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
 		this.vpb.x=this.p.x+Math.cos(this.angle * Math.PI / 180 - Math.PI / 2)*10000;
-		this.vpb.y = this.p.y+Math.sin(this.angle * Math.PI / 180 - Math.PI / 2)*10000;
+		this.vpb.y = this.p.y + Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
 	}
 	draw() {
 	}

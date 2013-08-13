@@ -17,7 +17,7 @@ class Entity {
         this.s = getSector(this.p);
 	}
 	draw() { }
-	collideWithWalls(n:vec2) {
+	collideWithWalls(n:vec2):bool {
 		var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
 		var md = dp.dist(new vec2(0, 0));
 		if (md > .00000000001)
@@ -40,10 +40,12 @@ class Entity {
 				var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
 				var wp = projectPoint(n, w.a, w.b);
 				this.p = wp.plus(w.n.scale(this.r));
+				return true;
 			}
 			else
 			{
 				this.p = n;
+				return false;
 			}
 		}
 	}
@@ -98,5 +100,48 @@ class BillboardEntity extends Entity {
 		var a = new vec2(n.y, -n.x).plus(this.p);
 		var b = new vec2(-n.y, n.x).plus(this.p);
 		quad(b, a, this.z, this.z + this.d.y, this.tex);
+	}
+}
+class Arrow extends Entity3D {
+	v: vec2;
+	vz: number;
+	stuck = false;
+	constructor(yaw: number, pitch: number, p: vec2,z:number) {
+		super(p);
+		this.angle = -yaw;
+		yaw = yaw * Math.PI / 180;
+		pitch = pitch * Math.PI / 180;
+		this.gravity = 0;
+		var x = Math.cos(pitch);
+		this.vz = Math.sin(pitch);
+		var y = 0;
+		this.v = new vec2(0, 0);
+		this.v.x = x * Math.cos(yaw) - y * Math.sin(yaw);
+		this.v.y = x * Math.sin(yaw) + y * Math.cos(yaw);
+		this.tex=getTex("arrowlevel.png");
+		this.nSide = 16;
+		this.z = z;
+		this.v.scale(.06);
+		this.vz *= .8;
+	}
+	update() {
+		if (this.stuck == false)
+		{
+			this.z += this.vz;
+			this.vz += -.024;
+			var n = this.p.plus(this.v);
+			if (this.collideWithWalls(n) == true)
+				this.stuck = true;
+			if (this.z + this.d.y * .125+ this.d.y * .875 / 2 < this.s.bottom)
+			{
+				this.z = this.s.bottom  - this.d.y * .875 / 2;
+				this.stuck = true;
+			}
+			if (this.z - this.d.y * .875 / 2 > this.s.top)
+			{
+				this.z = this.s.top  + this.d.y * .875 / 2;
+				this.stuck = true;
+			}
+		}
 	}
 }

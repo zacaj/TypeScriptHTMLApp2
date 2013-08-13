@@ -48,6 +48,7 @@ var Player = (function (_super) {
         }
         if (key["C"]) {
             this.height = 3;
+            n.x += 1;
         } else {
             this.height = 5;
         }
