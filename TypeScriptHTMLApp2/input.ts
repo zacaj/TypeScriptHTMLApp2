@@ -3,10 +3,10 @@
 var aiming = false;
 window.onkeydown=function(e)
 {
-	e.preventDefault();
 	var k = String.fromCharCode(e.keyCode);
 	if (k == " ")
 	{
+	e.preventDefault();
 		aiming = true;
 		return;
 	}
@@ -14,10 +14,10 @@ window.onkeydown=function(e)
 }
 window.onkeyup=function(e)
 {
-	e.preventDefault();
 	var k = String.fromCharCode(e.keyCode);
 	if (k == " ")
 	{
+	e.preventDefault();
 		aiming = false;
 		crosshair.p = new vec2(1024 / 2, 768 / 2);
 		return;

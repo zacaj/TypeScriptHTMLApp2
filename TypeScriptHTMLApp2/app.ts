@@ -139,8 +139,8 @@ function loaded() {
 	crosshair.tex = getTex("LB_Crosshair.png");
 	guis.push(crosshair);
 	
-	var bb = new BillboardEntity(player.p.plus(new vec2(30, 30)), getTex("LB_Bow01.png"));
-	entities.push(bb);
+	//var bb = new BillboardEntity(player.p.plus(new vec2(30, 30)), getTex("LB_Bow01.png"));
+	//entities.push(bb);
 
 	var en = new Entity3D(player.p.plus(new vec2(10, 0)));
 	en.tex = getTex("LB_SS_NPC01.png");
@@ -154,14 +154,14 @@ function loaded() {
 	ar.angle = 45;
 	entities.push(ar);*/
 	//for(var i = 0; i < walls.length;i++)
-	entities.push(new Target(walls[walls.length-3], 7.5, function () {
+	/*entities.push(new Target(walls[walls.length-3], 7.5, function () {
 		doDoor(sectors[1]);
 	}));
 	entities.push(new Button(walls[walls.length - 1], function () {
 		doDoor(sectors[1]);
-	}));
+	}));*/
 
-	addGrass(player.p.plus(new vec2(5, 5)));
+	//addGrass(player.p.plus(new vec2(5, 5)));
     setInterval(update, 17);
 }
 function update() {
@@ -405,7 +405,8 @@ function load(str) {
 	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0,"arrows.png",256,256,"LB_Target.png",44,44,"LB_Grass02.png",78,122,"LB_Grass01.png",91,128,"LB_Button01Off.png",11,11,"LB_Button01On.png",11,11];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
-    entities.splice(0, entities.length);
+	entities.splice(0, entities.length);
+	guis.spliec(0, guis.length);
     lpts = new Array<vec2>();
     var lines = str.split('\n');
     var nWall: number = parseInt(lines[0]);
@@ -515,12 +516,38 @@ function load(str) {
 	}
     var nEntity = parseInt(lines[at++]);
     for (var i = 0; i < nEntity; i++)
-    {
-        var str = lines[at++].split(',')[1];
-        var p = getVec2(lines[at++]);
-        var type = str.split('\n')[0];
+	{
+		var strln = lines[at++];
+		var str = strln.split(',')[1];
+		var l = parseInt(strln.split(',')[0]);
+		while (l > str.length)
+		{
+			str = str+"\n" + lines[at++];
+		}
+		var p = getVec2(lines[at++]);
+		var data = str.split('\n');
+        var type = data[0];
         if (type == "spawn")
-            entities.push(new Player(p));
+			entities.push(new Player(p));
+		if (type == "g")
+			addGrass(p);
+		if (type == "btn")
+		{
+			var s = sectors[parseInt(data[1])];
+			entities.push(new Button(getClosestWall(p), function () {
+				doDoor(s);
+			}));
+		}		
+		if (type == "trgt")
+		{
+			var s = sectors[parseInt(data[1])];
+			var h = parseFloat(data[2]);
+			var r = parseFloat(data[3]);
+			entities.push(new Target(getClosestWall(p),h, function () {
+				doDoor(s);
+			},r));
+		}
+
     }
     
     LoadTexture(textures);
@@ -542,4 +569,18 @@ function makeTri(a: vec2, b: vec2, c: vec2) {
     (<any>r).points_.push(b);
     (<any>r).points_.push(c);
     return r;
+}
+function getClosestWall(p: vec2): Wall {
+	var d = 999999;
+	var w = null;
+	for (var i = 0; i < walls.length; i++)
+	{
+		var d2 = distToSegmentSquared(p, walls[i].a, walls[i].b);
+		if (d2 < d)
+		{
+			d = d2;
+			w = walls[i];
+		}
+	}
+	return w;
 }
