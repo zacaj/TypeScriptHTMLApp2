@@ -95,7 +95,7 @@ var BillboardEntity = (function (_super) {
     BillboardEntity.prototype.draw = function () {
         var n = this.p.minus(projectPoint(this.p, player.vpa, player.vpb));
         n.normalize();
-        n = n.scale(this.d.x / 1);
+        n = n.scale(this.d.x / 2);
         var a = new vec2(n.y, -n.x).plus(this.p);
         var b = new vec2(-n.y, n.x).plus(this.p);
         quad(b, a, this.z, this.z + this.d.y, this.tex);
@@ -126,7 +126,7 @@ var Arrow = (function (_super) {
     Arrow.prototype.update = function () {
         if (this.stuck == false) {
             this.z += this.vz;
-            this.vz += -.024;
+            this.vz += -.01;
 
             var p = Math.abs(this.vz) / Math.sqrt(this.v.x * this.v.x + this.v.y * this.v.y + this.vz * this.vz);
             var i;
@@ -150,8 +150,51 @@ var Arrow = (function (_super) {
                 this.z = this.s.top + this.d.y * .875 / 2;
                 this.stuck = true;
             }
+            if (this.stuck == true) {
+                for (var i = 0; i < entities.length; i++) {
+                    if ((entities[i]).hit == false) {
+                        if (this.p.dist(entities[i].p) < entities[i].r && Math.abs(this.z - entities[i].z) < entities[i].r) {
+                            (entities[i]).hit = true;
+                            (entities[i]).func();
+                        }
+                    }
+                }
+            }
         }
     };
     return Arrow;
 })(Entity3D);
+
+var Target = (function (_super) {
+    __extends(Target, _super);
+    function Target(wall, z, func, r) {
+        if (typeof func === "undefined") { func = function () {
+        }; }
+        if (typeof r === "undefined") { r = 3.7; }
+        _super.call(this, wall.a.plus(wall.b).scale(.5));
+        this.hit = false;
+        this.z = z;
+        this.r = r;
+        this.tex = getTex("LB_Target.png");
+        this.a = wall.a.minus(this.p);
+        this.a.normalize();
+        this.a = this.a.scale(r).plus(wall.n.scale(.1)).plus(this.p);
+        this.b = wall.b.minus(this.p);
+        this.b.normalize();
+        this.b = this.b.scale(r).plus(wall.n.scale(.1)).plus(this.p);
+        this.gravity = 0;
+        this.func = func;
+    }
+    Target.prototype.draw = function () {
+        quad(this.a, this.b, this.z - this.r, this.z + this.r, this.tex);
+    };
+    return Target;
+})(Entity);
+
+function addGrass(p) {
+    var g = new BillboardEntity(p, getTex("LB_Grass0" + (Math.random() >= .5 ? "1" : "2") + ".png"));
+    g.d = new vec2(2 * .7, 3 * .7);
+    g.z = g.s.bottom;
+    entities.push(g);
+}
 //@ sourceMappingURL=entity.js.map

@@ -149,6 +149,9 @@ function loaded() {
     ar.nSide = 16;
     ar.angle = 45;
     entities.push(ar);*/
+    entities.push(new Target(walls[walls.length - 3], 7.5));
+
+    addGrass(player.p.plus(new vec2(5, 5)));
     setInterval(update, 17);
 }
 function update() {
@@ -410,7 +413,7 @@ function isLeft(a, b, c) {
     return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_SS_NPC01.png", 128, 0, "arrows.png", 256, 256];
+    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_SS_NPC01.png", 128, 0, "arrows.png", 256, 256, "LB_Target.png", 44, 44, "LB_Grass02.png", 78, 122, "LB_Grass01.png", 91, 128];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);

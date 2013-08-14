@@ -3,11 +3,26 @@
 var aiming = false;
 window.onkeydown=function(e)
 {
-    key[String.fromCharCode(e.keyCode)]=true;
+	e.preventDefault();
+	var k = String.fromCharCode(e.keyCode);
+	if (k == " ")
+	{
+		aiming = true;
+		return;
+	}
+    key[k]=true;
 }
 window.onkeyup=function(e)
 {
-    delete key[String.fromCharCode(e.keyCode)];
+	e.preventDefault();
+	var k = String.fromCharCode(e.keyCode);
+	if (k == " ")
+	{
+		aiming = false;
+		crosshair.p = new vec2(1024 / 2, 768 / 2);
+		return;
+	}
+    delete key[k];
 }
 function monmousemove(e: MouseEvent) {
 	e.preventDefault();
@@ -77,8 +92,8 @@ function monmouseup(e: MouseEvent) {
 	{
 		if (aiming == true)
 		{
-			var yaw = (-crosshair.p.x / 1024 + .5) * 97 + player.angle + Math.random() * 4 - 2;
-			var pitch = ((1-(crosshair.p.y / 768))*2-1 ) * 90 + Math.random() * 4 - 2;
+			var yaw = (-crosshair.p.x / 1024 + .5) * 111 + player.angle + Math.random() * 2 - 1;
+			var pitch = ((1 - (crosshair.p.y / 768)) * 2 - 1) * 90 + Math.random() * 2 - 1;
 			var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(player.angle * Math.PI / 180 - Math.PI / 2)*2.5).plus(player.p),1);
 			entities.push(arrow);
 		}
