@@ -63,7 +63,23 @@ var Enemy = (function (_super) {
         }
         if (j == s.walls.length)
             route.push(target); else {
-            alert("need inner pathing!!");
+            var startTri = null;
+            var endTri = null;
+            for (var i = 0; i < s.tris.length; i++) {
+                if (s.tris[i].pointIsIn(from)) {
+                    startTri = s.tris[i];
+                }
+                if (s.tris[i].pointIsIn(target))
+                    endTri = s.tris[i];
+                if (startTri != null && endTri != null)
+                    break;
+            }
+
+            var tris = this.recursiveSearch([startTri], endTri);
+            for (var i = 1; i < tris.length - 1; i++) {
+                route.push(tris[i].center);
+            }
+            route.push(target);
         }
     };
     Enemy.prototype.goto = function (p) {

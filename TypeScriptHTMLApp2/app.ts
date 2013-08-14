@@ -586,7 +586,8 @@ function makeTri(a: vec2, b: vec2, c: vec2) {
     (<any>r).points_ = new Array<vec2>();
     (<any>r).points_.push(a);
     (<any>r).points_.push(b);
-    (<any>r).points_.push(c);
+	(<any>r).points_.push(c);
+	r.center = a.plus(b.plus(c)).scale(.33333333333);
     return r;
 }
 function getClosestWall(p: vec2): Wall {

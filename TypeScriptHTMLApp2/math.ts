@@ -34,6 +34,7 @@ function copyvec2(p: vec2) {
 class Triangle {
     points_: vec2[]
     neighbors: Triangle[];
+	center: vec2;
 	sign(p1:vec2,p2:vec2,p3:vec2):number
 	{
 		return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);

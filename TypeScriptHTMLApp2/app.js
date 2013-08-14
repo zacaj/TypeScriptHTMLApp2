@@ -575,6 +575,7 @@ function makeTri(a, b, c) {
     (r).points_.push(a);
     (r).points_.push(b);
     (r).points_.push(c);
+    r.center = a.plus(b.plus(c)).scale(.33333333333);
     return r;
 }
 function getClosestWall(p) {
