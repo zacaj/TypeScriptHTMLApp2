@@ -16,38 +16,41 @@ class Player extends Entity3D {
 		}
 		var n = copyvec2(this.p);
 		var aimScale = 1;
+		var moveSpeed = 1;
 		if (aiming == true)
 			aimScale = .03;
-        if (key["W"])
-        {
-            n.x += Math.cos(this.angle * Math.PI / 180)*aimScale;
-			n.y += Math.sin(this.angle * Math.PI / 180) * aimScale;
-        }
-        if (key["S"])
-        {
-			n.x -= Math.cos(this.angle * Math.PI / 180) * aimScale;
-			n.y -= Math.sin(this.angle * Math.PI / 180) * aimScale;
-		}
-		if (key["A"])
-		{
-			n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
-			n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
-		}
-		if (key["D"])
-		{
-			n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
-			n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
-		}
-		if (key["C"])
+		if (key["ctrl"])
 		{
 			this.height = 3;
+			moveSpeed = .5;
 		}
 		else
 		{
 			this.height = 5;
 		}
-		if (key["Z"])
-			n.x += 1;
+		if (key["shift"])
+			moveSpeed = 1.4;
+		
+        if (key["W"])
+        {
+            n.x += Math.cos(this.angle * Math.PI / 180)*aimScale*moveSpeed;
+			n.y += Math.sin(this.angle * Math.PI / 180) * aimScale * moveSpeed;
+        }
+        if (key["S"])
+        {
+			n.x -= Math.cos(this.angle * Math.PI / 180) * aimScale * moveSpeed;
+			n.y -= Math.sin(this.angle * Math.PI / 180) * aimScale * moveSpeed;
+		}
+		if (key["A"])
+		{
+			n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale * moveSpeed;
+			n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale * moveSpeed;
+		}
+		if (key["D"])
+		{
+			n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale * moveSpeed;
+			n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale * moveSpeed;
+		}
 		if (key["X"])
 			this.p = n;
 		else

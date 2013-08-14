@@ -166,7 +166,7 @@ class Arrow extends Entity3D {
 				{
 					if ((<any>entities[i]).hit == false)
 					{
-						if (this.p.dist(entities[i].p) < entities[i].r && Math.abs(this.z - entities[i].z) < entities[i].r)
+						if (this.p.dist(entities[i].p) < entities[i].r && Math.abs(this.z+this.d.y/2 - entities[i].z) < entities[i].r)
 						{
 							(<any>entities[i]).hit = true;
 							(<any>entities[i]).func();

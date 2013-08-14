@@ -156,7 +156,7 @@ var Arrow = (function (_super) {
             if (this.stuck == true) {
                 for (var i = 0; i < entities.length; i++) {
                     if ((entities[i]).hit == false) {
-                        if (this.p.dist(entities[i].p) < entities[i].r && Math.abs(this.z - entities[i].z) < entities[i].r) {
+                        if (this.p.dist(entities[i].p) < entities[i].r && Math.abs(this.z + this.d.y / 2 - entities[i].z) < entities[i].r) {
                             (entities[i]).hit = true;
                             (entities[i]).func();
                         }

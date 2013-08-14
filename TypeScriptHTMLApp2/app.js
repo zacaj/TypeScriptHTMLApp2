@@ -3,6 +3,7 @@
 ///<reference path="math.ts" />
 ///<reference path="entity.ts" />
 ///<reference path="input.ts" />
+///<reference path="enemy.ts" />
 var gl;
 var ShaderProgramTex, ShaderProgramColor, VertexPositionTex, VertexTexture, MultPosition, ColorPosition, ScalePosition, TranPosition, TransPosition;
 var vertBuffer, uvBuffer;
@@ -23,7 +24,7 @@ var Wall = (function () {
 var walls = new Array();
 var Sector = (function () {
     function Sector() {
-        this.sectors = new Array();
+        this.neighbors = new Array();
         this.extendedWalls = new Array();
     }
     Sector.prototype.pointIsIn = function (p) {
@@ -118,6 +119,7 @@ window.onload = function () {
     load((document.getElementById("frmFile")).contentWindow.document.body.childNodes[0].innerHTML);
 };
 function loaded() {
+    loadEntities();
     crosshair = new GUI();
     crosshair.p = new vec2(1024 / 2, 768 / 2);
     crosshair.d = new vec2(35 * 2, 24 * 2);
@@ -126,11 +128,12 @@ function loaded() {
 
     //var bb = new BillboardEntity(player.p.plus(new vec2(30, 30)), getTex("LB_Bow01.png"));
     //entities.push(bb);
-    var en = new Entity3D(player.p.plus(new vec2(10, 0)));
+    /*var en = new Entity3D(player.p.plus(new vec2(10, 0)));
     en.tex = getTex("LB_SS_NPC01.png");
     en.nSide = 8;
     en.angle = 90;
-    entities.push(en);
+    entities.push(en);*/
+    entities.push(new Enemy(player.p.plus(new vec2(10, 10))));
 
     /*var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
     ar.tex = getTex("arrowlevel.png");
@@ -194,6 +197,11 @@ function update() {
     gl.uniformMatrix4fv(perspectivePT, false, makeOrtho(0, 1024, 768, 0, -1, 1));
     for (var i = 0; i < guis.length; i++)
         guis[i].draw();
+    for (var propt in keypressed) {
+        if (keypressed[propt] != frame)
+            delete keypressed[propt];
+    }
+    frame = !frame;
 }
 function quad(a, b, bottom, top, tex) {
     tex.bind();
@@ -416,6 +424,7 @@ function hexToRgb(hex) {
 function isLeft(a, b, c) {
     return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
+var lines, at;
 function load(str) {
     var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_SS_NPC01.png", 128, 0, "arrows.png", 256, 256, "LB_Target.png", 44, 44, "LB_Grass02.png", 78, 122, "LB_Grass01.png", 91, 128, "LB_Button01Off.png", 11, 11, "LB_Button01On.png", 11, 11];
     walls.splice(0, walls.length);
@@ -423,7 +432,7 @@ function load(str) {
     entities.splice(0, entities.length);
     guis.splice(0, guis.length);
     lpts = new Array();
-    var lines = str.split('\n');
+    lines = str.split('\n');
     var nWall = parseInt(lines[0]);
     for (var i = 0; i < nWall; i++) {
         var wall = new Wall();
@@ -438,7 +447,7 @@ function load(str) {
         }
         walls.push(wall);
     }
-    var at = nWall * 4 + 1;
+    at = nWall * 4 + 1;
     var nSector = parseInt(lines[at]);
     at++;
     for (var i = 0; i < nSector; i++) {
@@ -464,22 +473,22 @@ function load(str) {
         var nT = parseInt(lines[at++]);
         s.tris = new Array();
         for (var j = 0; j < nT; j++) {
-            var t = lines[at++].split(',');
-            s.tris.push(makeTri(s.pts[t[0]], s.pts[t[1]], s.pts[t[2]]));
+            var t3 = lines[at++].split(',');
+            s.tris.push(makeTri(s.pts[t3[0]], s.pts[t3[1]], s.pts[t3[2]]));
         }
         s.p = getVec2(lines[at++]);
         sectors.push(s);
         s.extendedWalls = s.extendedWalls.concat(s.walls);
     }
     for (var i = 0; i < walls.length; i++) {
-        var t = (walls[i]).t;
-        walls[i].s = sectors[t.x];
-        if (t.y != -1) {
-            walls[i].portal = sectors[t.y];
+        var t2 = (walls[i]).t;
+        walls[i].s = sectors[t2.x];
+        if (t2.y != -1) {
+            walls[i].portal = sectors[t2.y];
             walls[i].isPortal = true;
-            if (walls[i].s.sectors.indexOf(sectors[t.y]) == -1) {
-                walls[i].s.sectors.push(sectors[t.y]);
-                walls[i].s.extendedWalls = walls[i].s.extendedWalls.concat(sectors[t.y].walls);
+            if (walls[i].s.neighbors.indexOf(sectors[t2.y]) == -1) {
+                walls[i].s.neighbors.push(sectors[t2.y]);
+                walls[i].s.extendedWalls = walls[i].s.extendedWalls.concat(sectors[t2.y].walls);
             }
         }
         var wall = walls[i];
@@ -513,7 +522,12 @@ function load(str) {
             lastWall = wa;
         }
         sectors[i].createBuffers();
+        for (var j = 0; j < sectors[i].tris.length; j++)
+            sectors[i].tris[j].getNeighbors(sectors[i].tris);
     }
+    LoadTexture(textures);
+}
+function loadEntities() {
     var nEntity = parseInt(lines[at++]);
     for (var i = 0; i < nEntity; i++) {
         var strln = lines[at++];
@@ -544,8 +558,6 @@ function load(str) {
             }, r));
         }
     }
-
-    LoadTexture(textures);
 }
 var lpts;
 function getVec2(str) {

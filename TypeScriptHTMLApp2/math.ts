@@ -33,7 +33,7 @@ function copyvec2(p: vec2) {
 }
 class Triangle {
     points_: vec2[]
-    
+    neighbors: Triangle[];
 	sign(p1:vec2,p2:vec2,p3:vec2):number
 	{
 		return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
@@ -47,6 +47,18 @@ class Triangle {
 		b3 = this.sign(pt, this.points_[2], this.points_[0]) < 0.0;
 
 		return ((b1 == b2) && (b2 == b3));
+	}
+	getNeighbors(tris: Triangle[]) {
+		for (var i = 0; i < tris.length; i++)
+		{
+			var tri = tris[i];
+			var common = 0;
+			for (var j = 0; j < this.points_.length; j++)
+				if (tri.points_.indexOf(this.points_[i]) != -1)
+					common++;
+			if (common == 2)
+				this.neighbors.push(tri);
+		}
 	}
 }
 function pointInPolygon(p: vec2, pts: vec2[]): bool {
@@ -246,4 +258,13 @@ function axisAngle(x, y, z, angle) {
 	m[9] = tmp1 + tmp2;
 	m[6] = tmp1 - tmp2;
 	return transpose(m);
+}
+
+function lineLine(a: vec2, b: vec2, c: vec2, d: vec2): bool {
+	var r = ((a.y - c.y) * (d.x - c.x) - (a.x - c.x) * (d.y - c.y)) / ((b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x));
+	var s = ((a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y)) / ((b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x));
+	if (r >= 0 && r <= 1 && s >= 0 && s <= 1)
+		return true;
+	else
+		return false;
 }

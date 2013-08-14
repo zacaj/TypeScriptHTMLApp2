@@ -45,6 +45,17 @@ var Triangle = (function () {
 
         return ((b1 == b2) && (b2 == b3));
     };
+    Triangle.prototype.getNeighbors = function (tris) {
+        for (var i = 0; i < tris.length; i++) {
+            var tri = tris[i];
+            var common = 0;
+            for (var j = 0; j < this.points_.length; j++)
+                if (tri.points_.indexOf(this.points_[i]) != -1)
+                    common++;
+            if (common == 2)
+                this.neighbors.push(tri);
+        }
+    };
     return Triangle;
 })();
 function pointInPolygon(p, pts) {
@@ -278,5 +289,13 @@ function axisAngle(x, y, z, angle) {
     m[9] = tmp1 + tmp2;
     m[6] = tmp1 - tmp2;
     return transpose(m);
+}
+
+function lineLine(a, b, c, d) {
+    var r = ((a.y - c.y) * (d.x - c.x) - (a.x - c.x) * (d.y - c.y)) / ((b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x));
+    var s = ((a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y)) / ((b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x));
+    if (r >= 0 && r <= 1 && s >= 0 && s <= 1)
+        return true; else
+        return false;
 }
 //@ sourceMappingURL=math.js.map

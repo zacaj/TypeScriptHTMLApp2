@@ -1,18 +1,29 @@
 ﻿var key = new Object();
+var keypressed = new Object();
 
 ///<reference path="player.ts" />
 var aiming = false;
+var frame = false;
 window.onkeydown = function (e) {
-    var k = String.fromCharCode(e.keyCode);
+    var k;
+    if (e.keyCode > 31 && e.keyCode < 129)
+        k = String.fromCharCode(e.keyCode); else if (e.keyCode == 17)
+        k = "ctrl"; else if (e.keyCode == 16)
+        k = "shift";
     if (k == " ") {
         e.preventDefault();
         aiming = true;
         return;
     }
     key[k] = true;
+    keypressed[k] = frame;
 };
 window.onkeyup = function (e) {
-    var k = String.fromCharCode(e.keyCode);
+    var k;
+    if (e.keyCode > 31 && e.keyCode < 129)
+        k = String.fromCharCode(e.keyCode); else if (e.keyCode == 17)
+        k = "ctrl"; else if (e.keyCode == 16)
+        k = "shift";
     if (k == " ") {
         e.preventDefault();
         aiming = false;
