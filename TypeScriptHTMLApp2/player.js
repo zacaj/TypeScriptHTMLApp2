@@ -22,9 +22,9 @@ var Player = (function (_super) {
     Player.prototype.update = function () {
         if (aiming == false) {
             if (key["Q"])
-                this.angle += 5;
-            if (key["E"])
                 this.angle -= 5;
+            if (key["E"])
+                this.angle += 5;
         }
         var n = copyvec2(this.p);
         var aimScale = 1;
@@ -39,18 +39,20 @@ var Player = (function (_super) {
             n.y -= Math.sin(this.angle * Math.PI / 180) * aimScale;
         }
         if (key["A"]) {
-            n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
-            n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
-        }
-        if (key["D"]) {
             n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
             n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
+        }
+        if (key["D"]) {
+            n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
+            n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
         }
         if (key["C"]) {
             this.height = 3;
         } else {
             this.height = 5;
         }
+        if (key["Z"])
+            n.x += 1;
         if (key["X"])
             this.p = n; else
             this.collideWithWalls(n);

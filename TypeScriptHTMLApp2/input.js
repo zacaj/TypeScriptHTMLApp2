@@ -28,11 +28,11 @@ function monmousemove(e) {
         crosshair.p.x += movementX * .9;
         crosshair.p.y += movementY * .9;
         if (crosshair.p.x < 0) {
-            player.angle += -(crosshair.p.x) / .9 * .008;
+            player.angle -= -(crosshair.p.x) / .9 * .008;
             crosshair.p.x = 0;
         }
         if (crosshair.p.x > 1024) {
-            player.angle -= (crosshair.p.x - 1024) / .9 * .008;
+            player.angle += (crosshair.p.x - 1024) / .9 * .008;
             crosshair.p.x = 1024;
         }
         if (crosshair.p.y < 0)
@@ -40,7 +40,7 @@ function monmousemove(e) {
         if (crosshair.p.y > 768)
             crosshair.p.y = 768;
     } else {
-        player.angle -= movementX * .6;
+        player.angle += movementX * .6;
     }
 }
 var locked = false;
@@ -70,7 +70,7 @@ function monmouseup(e) {
 
     if (e.button == 0) {
         if (aiming == true) {
-            var yaw = (-crosshair.p.x / 1024 + .5) * 111 + player.angle + Math.random() * 2 - 1;
+            var yaw = (crosshair.p.x / 1024 - .5) * 111 + player.angle + Math.random() * 2 - 1;
             var pitch = ((1 - (crosshair.p.y / 768)) * 2 - 1) * 90 + Math.random() * 2 - 1;
             var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(player.p), 1);
             entities.push(arrow);

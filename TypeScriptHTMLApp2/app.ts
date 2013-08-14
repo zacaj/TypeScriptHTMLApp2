@@ -145,7 +145,7 @@ function loaded() {
 	var en = new Entity3D(player.p.plus(new vec2(10, 0)));
 	en.tex = getTex("LB_SS_NPC01.png");
 	en.nSide = 8;
-	en.angle = 45;
+	en.angle = 90;
 	entities.push(en);
 
 	/*var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
@@ -303,11 +303,16 @@ function MakePerspective(FOV, AspectRatio, Closest, Farest) {
     ];
 }
 function MakeTransform() {
-    var a = (player.angle - 90) * Math.PI / 180;
+	/*var mat = axisAngle(0, 1, 0, player.angle);
+	mat[12] = player.p.x;
+	mat[13] = player.z + player.height;
+	mat[14] = player.p.y;
+	return transpose(inverse(transpose(mat)));*/
+    var a = (-player.angle) * Math.PI / 180;
     var rot= [
-        Math.cos(a), 0, Math.cos(a - Math.PI / 2), 0,
+		Math.cos(a - Math.PI / 2), 0, Math.cos(a), 0,
         0, 1, 0, 0,
-        Math.sin(a ), 0, Math.sin(a - Math.PI / 2), 0,
+		Math.sin(a - Math.PI / 2 ), 0, Math.sin(a), 0,
 		player.p.x, (player.z + player.height),player.p.y,1
     ];
 
@@ -406,7 +411,7 @@ function load(str) {
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
 	entities.splice(0, entities.length);
-	guis.spliec(0, guis.length);
+	guis.splice(0, guis.length);
     lpts = new Array<vec2>();
     var lines = str.split('\n');
     var nWall: number = parseInt(lines[0]);

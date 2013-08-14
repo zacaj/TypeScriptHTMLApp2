@@ -72,7 +72,7 @@ class Entity3D extends Entity {
 		n = this.p.minus(player.p);
 		n.normalize();
 		var a2p = Math.atan2(n.y, n.x); 
-        a2p+=this.angle*Math.PI/180;
+        a2p-=this.angle*Math.PI/180;
 		a2p += Math.PI * 2 / this.nSide / 2;
 		if (a2p < 0)
 			a2p += Math.PI * 2;
@@ -112,7 +112,7 @@ class Arrow extends Entity3D {
 	stuck = false;
 	constructor(yaw: number, pitch: number, p: vec2,z:number) {
 		super(p);
-		this.angle = -yaw;
+		this.angle =yaw;
 		yaw = yaw * Math.PI / 180;
 		pitch = pitch * Math.PI / 180;
 		this.gravity = 0;
@@ -215,7 +215,7 @@ class Button extends Decal {
 	func: Function;
 	constructor(wall: Wall, func: Function) {
 		super(wall, 5, 3.5, 3.5, getTex("LB_Button01Off.png"));
-		this.func = func;
+		this.func=func;
 	}
 	update() {
 		if (this.onFor > 0)

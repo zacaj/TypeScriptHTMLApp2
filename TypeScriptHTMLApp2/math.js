@@ -231,4 +231,52 @@ function makeOrtho(left, right, bottom, top, zNear, zFar) {
     m[15] = 1;
     return transpose(m);
 }
+function axisAngle(x, y, z, angle) {
+    var m = [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+    ];
+    var axis = { x: x, y: y, z: z };
+    var c = Math.cos(angle * Math.PI / 180);
+    var s = Math.sin(angle * Math.PI / 180);
+    var t = 1. - c;
+
+    //  if axis is not already normalized then uncomment this
+    // double magnitude = Math.sqrt(a1.x*a1.x + a1.y*a1.y + a1.z*a1.z);
+    // if (magnitude==0) throw error;
+    // a1.x /= magnitude;
+    // a1.y /= magnitude;
+    // a1.z /= magnitude;
+    m[0] = c + axis.x * axis.x * t;
+    m[5] = c + axis.y * axis.y * t;
+    m[10] = c + axis.z * axis.z * t;
+
+    var tmp1 = axis.x * axis.y * t;
+    var tmp2 = axis.z * s;
+    m[4] = tmp1 + tmp2;
+    m[1] = tmp1 - tmp2;
+    tmp1 = axis.x * axis.z * t;
+    tmp2 = axis.y * s;
+    m[8] = tmp1 - tmp2;
+    m[2] = tmp1 + tmp2;
+    tmp1 = axis.y * axis.z * t;
+    tmp2 = axis.x * s;
+    m[9] = tmp1 + tmp2;
+    m[6] = tmp1 - tmp2;
+    return transpose(m);
+}
 //@ sourceMappingURL=math.js.map

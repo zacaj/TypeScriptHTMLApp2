@@ -10,9 +10,9 @@ class Player extends Entity3D {
 		if (aiming == false)
 		{
 			if (key["Q"])
-				this.angle += 5;
-			if (key["E"])
 				this.angle -= 5;
+			if (key["E"])
+				this.angle += 5;
 		}
 		var n = copyvec2(this.p);
 		var aimScale = 1;
@@ -30,13 +30,13 @@ class Player extends Entity3D {
 		}
 		if (key["A"])
 		{
-			n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
-			n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
+			n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
+			n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
 		}
 		if (key["D"])
 		{
-			n.x += Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
-			n.y += Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * aimScale;
+			n.x += Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
+			n.y += Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * aimScale;
 		}
 		if (key["C"])
 		{
@@ -46,6 +46,8 @@ class Player extends Entity3D {
 		{
 			this.height = 5;
 		}
+		if (key["Z"])
+			n.x += 1;
 		if (key["X"])
 			this.p = n;
 		else

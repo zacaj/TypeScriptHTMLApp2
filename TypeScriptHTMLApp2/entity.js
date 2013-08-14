@@ -69,7 +69,7 @@ var Entity3D = (function (_super) {
         n = this.p.minus(player.p);
         n.normalize();
         var a2p = Math.atan2(n.y, n.x);
-        a2p += this.angle * Math.PI / 180;
+        a2p -= this.angle * Math.PI / 180;
         a2p += Math.PI * 2 / this.nSide / 2;
         if (a2p < 0)
             a2p += Math.PI * 2;
@@ -110,7 +110,7 @@ var Arrow = (function (_super) {
     function Arrow(yaw, pitch, p, z) {
         _super.call(this, p);
         this.stuck = false;
-        this.angle = -yaw;
+        this.angle = yaw;
         yaw = yaw * Math.PI / 180;
         pitch = pitch * Math.PI / 180;
         this.gravity = 0;
