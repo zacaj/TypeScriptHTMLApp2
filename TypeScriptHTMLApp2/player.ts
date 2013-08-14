@@ -41,12 +41,14 @@ class Player extends Entity3D {
 		if (key["C"])
 		{
 			this.height = 3;
-			n.x += 1;
 		}
 		else
 		{
 			this.height = 5;
 		}
+		if (key["X"])
+			this.p = n;
+		else
 		this.collideWithWalls(n);
 		if (this.z - this.s.bottom < -.3)
 			this.z += .3;

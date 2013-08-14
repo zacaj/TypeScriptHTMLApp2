@@ -10,13 +10,15 @@ var Entity = (function () {
     function Entity(p) {
         this.r = 1;
         this.gravity = .3;
+        this.remove = false;
         this.z = 0;
         this.p = (p);
         this.s = getSector(this.p);
     }
     Entity.prototype.update = function () {
-        if (this.z - this.s.bottom > this.gravity)
-            this.z -= this.gravity;
+        if (this.s)
+            if (this.z - this.s.bottom > this.gravity)
+                this.z -= this.gravity;
     };
 
     Entity.prototype.draw = function () {
@@ -82,6 +84,7 @@ var Entity3D = (function (_super) {
         gl.uniform2f(TranPosition, 0, 0);
     };
     Entity3D.prototype.update = function () {
+        _super.prototype.update.call(this);
     };
     return Entity3D;
 })(Entity);
@@ -120,7 +123,7 @@ var Arrow = (function (_super) {
         this.tex = getTex("arrows.png");
         this.nSide = 16;
         this.z = z;
-        this.v.scale(.06);
+        this.v.scale(.08);
         this.vz *= .8;
     }
     Arrow.prototype.update = function () {
@@ -165,36 +168,101 @@ var Arrow = (function (_super) {
     return Arrow;
 })(Entity3D);
 
+var Decal = (function (_super) {
+    __extends(Decal, _super);
+    function Decal(wall, z, w, h, tex) {
+        _super.call(this, wall.a.plus(wall.b).scale(.5).plus(wall.n.scale(.1)));
+        this.z = z;
+        this.r = w / 2;
+        this.height = h;
+        this.tex = tex;
+        this.a = wall.a.minus(this.p);
+        this.a.normalize();
+        this.a = this.a.scale(this.r).plus(this.p);
+        this.b = wall.b.minus(this.p);
+        this.b.normalize();
+        this.b = this.b.scale(this.r).plus(this.p);
+        this.gravity = 0;
+    }
+    Decal.prototype.draw = function () {
+        quad(this.a, this.b, this.z - this.height / 2, this.z + this.height / 2, this.tex);
+    };
+    return Decal;
+})(Entity);
 var Target = (function (_super) {
     __extends(Target, _super);
     function Target(wall, z, func, r) {
         if (typeof func === "undefined") { func = function () {
         }; }
         if (typeof r === "undefined") { r = 3.7; }
-        _super.call(this, wall.a.plus(wall.b).scale(.5));
+        _super.call(this, wall, z, r * 2, r * 2, getTex("LB_Target.png"));
         this.hit = false;
-        this.z = z;
-        this.r = r;
-        this.tex = getTex("LB_Target.png");
-        this.a = wall.a.minus(this.p);
-        this.a.normalize();
-        this.a = this.a.scale(r).plus(wall.n.scale(.1)).plus(this.p);
-        this.b = wall.b.minus(this.p);
-        this.b.normalize();
-        this.b = this.b.scale(r).plus(wall.n.scale(.1)).plus(this.p);
-        this.gravity = 0;
         this.func = func;
     }
-    Target.prototype.draw = function () {
-        quad(this.a, this.b, this.z - this.r, this.z + this.r, this.tex);
-    };
     return Target;
-})(Entity);
+})(Decal);
+
+var Button = (function (_super) {
+    __extends(Button, _super);
+    function Button(wall, func) {
+        _super.call(this, wall, 5, 3.5, 3.5, getTex("LB_Button01Off.png"));
+        this.onFor = 0;
+        this.func = func;
+    }
+    Button.prototype.update = function () {
+        if (this.onFor > 0) {
+            this.onFor--;
+            if (this.onFor > 0)
+                this.tex = getTex("LB_Button01On.png"); else
+                this.tex = getTex("LB_Button01Off.png");
+        } else if (key["F"]) {
+            var a = Math.abs(Math.atan2(this.p.y - player.p.y, this.p.x - player.p.x)) * 180 / Math.PI;
+            if (Math.abs(a + player.angle) < 40)
+                if (this.p.dist(player.p) < 8) {
+                    this.onFor = 30;
+                    this.func();
+                }
+        }
+    };
+    return Button;
+})(Decal);
 
 function addGrass(p) {
     var g = new BillboardEntity(p, getTex("LB_Grass0" + (Math.random() >= .5 ? "1" : "2") + ".png"));
-    g.d = new vec2(2 * .7, 3 * .7);
+    g.d = new vec2(2 * .8, 3 * .8);
     g.z = g.s.bottom;
     entities.push(g);
+}
+var DoorDoer = (function (_super) {
+    __extends(DoorDoer, _super);
+    function DoorDoer(s, dir) {
+        _super.call(this, new vec2(0, 0));
+        this.s = s;
+        this.dir = dir;
+    }
+    DoorDoer.prototype.update = function () {
+        if (this.s == player.s)
+            return;
+        if (this.dir == true) {
+            this.s.top -= .3;
+
+            if (this.s.bottom > this.s.top) {
+                this.remove = true;
+                this.s.top = this.s.bottom;
+            }
+        } else {
+            this.s.top += .3;
+            if (this.s.top > this.s.oTop) {
+                this.remove = true;
+                this.s.top = this.s.oTop;
+            }
+        }
+    };
+    return DoorDoer;
+})(Entity);
+function doDoor(s) {
+    if (s.top - s.bottom > .1)
+        entities.push(new DoorDoer(s, true)); else
+        entities.push(new DoorDoer(s, false));
 }
 //@ sourceMappingURL=entity.js.map

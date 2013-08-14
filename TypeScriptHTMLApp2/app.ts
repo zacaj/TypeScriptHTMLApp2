@@ -5,7 +5,7 @@
 ///<reference path="entity.ts" />
 ///<reference path="input.ts" />
 var gl: WebGLRenderingContext;
-var ShaderProgramTex,ShaderProgramColor, VertexPositionTex, VertexTexture,MultPosition,ColorPosition,ScalePosition,TranPosition;
+var ShaderProgramTex,ShaderProgramColor, VertexPositionTex, VertexTexture,MultPosition,ColorPosition,ScalePosition,TranPosition,TransPosition;
 var vertBuffer, uvBuffer;
 var perspectivePT: WebGLUniformLocation, transformPT: WebGLUniformLocation;
 var perspectivePC: WebGLUniformLocation, transformPC: WebGLUniformLocation;
@@ -26,13 +26,14 @@ class Sector {
     walls: Wall[];
     pts: vec2[];
     bottom: number;
-    top: number;
+	top: number;
+	oBottom: number;
+	oTop: number;
     floorColor;
     ceilingColor;
     tris: Triangle[];
 	p: vec2;
 	floorBuffer;
-	ceilingBuffer;
 	uvBuffer;
 	sectors: Sector[]=new Array<Sector>();
 	extendedWalls: Wall[]=new Array<Wall>();
@@ -57,52 +58,41 @@ class Sector {
 				quad(wall.a, wall.b, this.bottom, this.top, getTex(wall.textureName));
 		}
 		gl.uniform1f(MultPosition, 0);
+		gl.uniform1f(TransPosition, this.bottom);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.floorBuffer);
 		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
 		gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
 		gl.uniform4f(ColorPosition, this.floorColor.r, this.floorColor.g, this.floorColor.b,1);
 		gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.ceilingBuffer);
+		gl.uniform1f(TransPosition, this.top);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.floorBuffer);
 		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
 		gl.uniform4f(ColorPosition, this.ceilingColor.r, this.ceilingColor.g , this.ceilingColor.b,1);
 		gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
+		gl.uniform1f(TransPosition, 0);
 	}
 	createBuffers() {
 		var floorVerts = new Array<number>();
-		var ceilingVerts = new Array<number>();
 		var uvs = new Array<number>();
 		for (var i = 0; i < this.tris.length; i++)
 		{
 			floorVerts.push(this.tris[i].points_[0].x);
-			floorVerts.push(this.bottom);
+			floorVerts.push(0);
 			floorVerts.push(this.tris[i].points_[0].y);
 			floorVerts.push(this.tris[i].points_[1].x);
-			floorVerts.push(this.bottom);
+			floorVerts.push(0);
 			floorVerts.push(this.tris[i].points_[1].y);
 			floorVerts.push(this.tris[i].points_[2].x);
-			floorVerts.push(this.bottom);
+			floorVerts.push(0);
 			floorVerts.push(this.tris[i].points_[2].y);
 			for (var j = 0; j < 6; j++)
 				uvs.push(0);
-			ceilingVerts.push(this.tris[i].points_[0].x);
-			ceilingVerts.push(this.top);
-			ceilingVerts.push(this.tris[i].points_[0].y);
-			ceilingVerts.push(this.tris[i].points_[1].x);
-			ceilingVerts.push(this.top);
-			ceilingVerts.push(this.tris[i].points_[1].y);
-			ceilingVerts.push(this.tris[i].points_[2].x);
-			ceilingVerts.push(this.top);
-			ceilingVerts.push(this.tris[i].points_[2].y);
 		}
 		this.floorBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.floorBuffer);
 		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(floorVerts), gl.STATIC_DRAW);
-		this.ceilingBuffer = gl.createBuffer();
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.ceilingBuffer);
-		gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
-		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ceilingVerts), gl.STATIC_DRAW);
 		this.uvBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.uvBuffer);
 		gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
@@ -163,8 +153,13 @@ function loaded() {
 	ar.nSide = 16;
 	ar.angle = 45;
 	entities.push(ar);*/
-
-	entities.push(new Target(walls[walls.length - 3], 7.5));
+	//for(var i = 0; i < walls.length;i++)
+	entities.push(new Target(walls[walls.length-3], 7.5, function () {
+		doDoor(sectors[1]);
+	}));
+	entities.push(new Button(walls[walls.length - 1], function () {
+		doDoor(sectors[1]);
+	}));
 
 	addGrass(player.p.plus(new vec2(5, 5)));
     setInterval(update, 17);
@@ -181,6 +176,12 @@ function update() {
     for (var i = 0; i < entities.length; i++)
     {
 		entities[i].update();
+		if (entities[i].remove == true)
+		{
+			entities.splice(i, 1);
+			i--;
+			continue;
+		}
 		if (!entities[i].s.pointIsIn(entities[i].p))
 		{
 			var t = getSector(entities[i].p);
@@ -271,6 +272,7 @@ function initGL() {
 		MultPosition = gl.getUniformLocation(ShaderProgramTex, "texMult");
 		ScalePosition = gl.getUniformLocation(ShaderProgramTex, "texScale");
 		TranPosition = gl.getUniformLocation(ShaderProgramTex, "texTran");
+		TransPosition = gl.getUniformLocation(ShaderProgramTex, "trans");
 	
 	}
     uvBuffer = gl.createBuffer();
@@ -400,7 +402,7 @@ function isLeft(a,b,c):bool {
 	return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 function load(str) {
-	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0,"arrows.png",256,256,"LB_Target.png",44,44,"LB_Grass02.png",78,122,"LB_Grass01.png",91,128];
+	var textures = ["LB_Crosshair.png",35,24,"LB_Bow01.png",475,208,"LB_SS_NPC01.png",128,0,"arrows.png",256,256,"LB_Target.png",44,44,"LB_Grass02.png",78,122,"LB_Grass01.png",91,128,"LB_Button01Off.png",11,11,"LB_Button01On.png",11,11];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);
@@ -435,7 +437,9 @@ function load(str) {
         at += nWall;
         var t = getVec2(lines[at++]);
         s.bottom = t.x;
-        s.top = t.y;
+		s.top = t.y;
+		s.oBottom = s.bottom;
+		s.oTop = s.top;
         t = lines[at++].split(',');
 		s.floorColor = hexToRgb(t[0]);
 		s.ceilingColor = hexToRgb(t[1]);

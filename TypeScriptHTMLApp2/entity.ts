@@ -7,7 +7,9 @@ class Entity {
 	z: number;
 	r: number = 1;
 	gravity = .3;
+	remove = false;
 	update() {
+		if(this.s)
 		if (this.z - this.s.bottom > this.gravity)
 			this.z -= this.gravity;
 	}
@@ -85,6 +87,7 @@ class Entity3D extends Entity {
 		gl.uniform2f(TranPosition, 0, 0);
 	}
 	update() {
+		super.update();
 	}
 }
 class BillboardEntity extends Entity {
@@ -122,7 +125,7 @@ class Arrow extends Entity3D {
 		this.tex=getTex("arrows.png");
 		this.nSide = 16;
 		this.z = z;
-		this.v.scale(.06);
+		this.v.scale(.08);
 		this.vz *= .8;
 	}
 	update() {
@@ -175,34 +178,109 @@ class Arrow extends Entity3D {
 	}
 }
 
-class Target extends Entity {
-	hit = false;
+class Decal extends Entity {
 	tex: Texture;
 	a: vec2;
 	b: vec2;
-	func: Function;
-	constructor(wall: Wall, z: number, func: Function= function () { },r=3.7) {
-		super(wall.a.plus(wall.b).scale(.5));
+	height: number;
+	constructor(wall: Wall, z: number, w: number, h:number,tex: Texture) {
+		super(wall.a.plus(wall.b).scale(.5).plus(wall.n.scale(.1)));
 		this.z = z;
-		this.r = r;
-		this.tex = getTex("LB_Target.png");
+		this.r = w / 2;
+		this.height = h;
+		this.tex = tex;
 		this.a = wall.a.minus(this.p);
 		this.a.normalize();
-		this.a = this.a.scale(r).plus(wall.n.scale(.1)).plus(this.p);
+		this.a = this.a.scale(this.r).plus(this.p);
 		this.b = wall.b.minus(this.p);
 		this.b.normalize();
-		this.b = this.b.scale(r).plus(wall.n.scale(.1)).plus(this.p);
+		this.b = this.b.scale(this.r).plus(this.p);
 		this.gravity = 0;
-		this.func = func;
 	}
 	draw() {
-		quad(this.a, this.b, this.z - this.r, this.z + this.r, this.tex);
+		quad(this.a, this.b, this.z - this.height / 2, this.z + this.height / 2, this.tex);
 	}
 }
+class Target extends Decal {
+	hit = false;
+	func: Function;
+	constructor(wall: Wall, z: number, func: Function= function () { },r=3.7) {
+		super(wall, z, r * 2,r*2, getTex("LB_Target.png"));
+		this.func = func;
+	}
+}
+
+class Button extends Decal {
+	onFor = 0;
+	func: Function;
+	constructor(wall: Wall, func: Function) {
+		super(wall, 5, 3.5, 3.5, getTex("LB_Button01Off.png"));
+		this.func = func;
+	}
+	update() {
+		if (this.onFor > 0)
+		{
+			this.onFor--;
+			if (this.onFor > 0)
+				this.tex = getTex("LB_Button01On.png");
+			else
+				this.tex = getTex("LB_Button01Off.png");
+		}
+		else
+			if (key["F"])
+			{
+				var a = Math.abs(Math.atan2(this.p.y - player.p.y, this.p.x - player.p.x))*180/Math.PI;
+				if (Math.abs(a + player.angle) < 40)
+					if (this.p.dist(player.p)<8)
+				{
+					this.onFor = 30;
+					this.func();
+				}
+			}
+	}
+}	
 
 function addGrass(p: vec2) {
 	var g = new BillboardEntity(p, getTex("LB_Grass0" + (Math.random() >= .5 ? "1" : "2") + ".png"));
 	g.d = new vec2(2*.8, 3*.8);
 	g.z = g.s.bottom;
 	entities.push(g);
+}
+class DoorDoer extends Entity {
+	s: Sector;
+	dir: bool;
+	constructor(s: Sector,dir:bool) {
+		super(new vec2(0, 0));
+		this.s = s;
+		this.dir = dir;
+	}
+	update() {
+		if (this.s == player.s)
+			return;
+		if (this.dir == true)
+		{
+			this.s.top -= .3;
+			//this.s.top -= .03;
+			if (this.s.bottom > this.s.top)
+			{
+				this.remove = true;
+				this.s.top = this.s.bottom;
+			}
+		}
+		else
+		{
+			this.s.top += .3;
+			if (this.s.top > this.s.oTop)
+			{
+				this.remove = true;
+				this.s.top = this.s.oTop;
+			}
+		}
+	}
+}
+function doDoor(s:Sector) {
+	if (s.top - s.bottom > .1)
+		entities.push(new DoorDoer(s, true));
+	else
+		entities.push(new DoorDoer(s, false));
 }
