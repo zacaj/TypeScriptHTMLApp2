@@ -29,9 +29,11 @@ class Enemy extends Entity3D {
 				if (this.p.dist(this.route[0]) < .81)
 					n=n.scale(this.p.dist(this.route[0]));
 				else
-					n=n.scale(.8);
+					n = n.scale(.8);
+				this.angle = Math.atan2(n.y, n.x);
 				ne = ne.plus(n);
 				this.collideWithWalls(ne);
+				document.getElementById("debug").innerHTML = "" + this.p.x + ", " + this.p.y;
 				var d = this.p.dist(this.route[0]);
 				if ( d< .1)
 					this.route.splice(0, 1);
@@ -63,7 +65,7 @@ class Enemy extends Entity3D {
 		var j;
 		for (j = 0; j < s.walls.length; j++)
 		{
-			if (s.walls[j] == portal || (s.walls[j].portal == lastSector))
+			if (s.walls[j] == portal || (lastSector!=null && s.walls[j].portal == lastSector))
 				continue;
 			if (lineLine(from, target, s.walls[j].a, s.walls[j].b) == true)
 				break;
@@ -96,6 +98,7 @@ class Enemy extends Entity3D {
 	}
 	goto(p: vec2) {
 		var route = new Array<vec2>();
+		p = copyvec2(p);
 		var targetSector = getSector(p);
 		if (this.s == targetSector)
 		{
@@ -110,6 +113,7 @@ class Enemy extends Entity3D {
 		{
 			var lastSector = null;
 			var lastWaypoint = this.p;
+			var lastPortal = null;
 			for (var i = 0; i < sectors.length - 1; i++)
 			{
 				var s = sectors[i];
@@ -128,10 +132,13 @@ class Enemy extends Entity3D {
 					alert("boom!");
 				else
 				{
+					to = to.plus(portal.n.scale(this.r));
 					this.pathfindInSector(lastWaypoint, to, portal, s, lastSector, route);
 				}
 				lastSector = s;
-				lastWaypoint = to;
+				lastWaypoint = to.minus(portal.n.scale(this.r * 3));
+				route.push(lastWaypoint);
+				lastPortal = portal;
 			}
 			this.pathfindInSector(lastWaypoint, p, null, targetSector, lastSector, route);
 			this.route = route;

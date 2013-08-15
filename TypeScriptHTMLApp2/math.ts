@@ -33,7 +33,7 @@ function copyvec2(p: vec2) {
 }
 class Triangle {
     points_: vec2[]
-    neighbors: Triangle[];
+    neighbors: Triangle[]=new Array<Triangle>();
 	center: vec2;
 	sign(p1:vec2,p2:vec2,p3:vec2):number
 	{
@@ -53,10 +53,15 @@ class Triangle {
 		for (var i = 0; i < tris.length; i++)
 		{
 			var tri = tris[i];
+			if (tri == this)
+				continue;
 			var common = 0;
 			for (var j = 0; j < this.points_.length; j++)
-				if (tri.points_.indexOf(this.points_[i]) != -1)
+			{
+				var k = tri.points_.indexOf(this.points_[j]);
+				if (k != -1)
 					common++;
+			}
 			if (common == 2)
 				this.neighbors.push(tri);
 		}
