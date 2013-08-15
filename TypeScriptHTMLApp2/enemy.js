@@ -28,15 +28,12 @@ var Enemy = (function (_super) {
                     this.goto(player.p);
                     document.getElementById("debug").innerHTML += "<br>saw player, goto";
                 } else if (this.p.dist(this.lastSeen) > 10) {
-                    this.goto(this.lastSeen);
-                    document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
                 }
                 this.aimFrame--;
             }
             if (key["G"]) {
-                if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50) {
+                 {
                     this.goto(player.p);
-                    document.getElementById("debug").innerHTML += "<br>force player left dest, redest";
                 }
             }
         }
@@ -60,31 +57,16 @@ var Enemy = (function (_super) {
             document.getElementById("debug").innerHTML += "<br>firing";
             this.aimFrame = 200;
             var yaw = this.angle + Math.random() * 1.5 - .75;
-            var pitch = 33;
+            var pitch = 35;
             var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(this.p), 1, .7);
             entities.push(arrow);
         }
     };
     Enemy.prototype.navigate = function () {
-         {
-            if (this.route.length > 0 && this.canSee(this.route[this.route.length - 1]) == true) {
-                if (this.canSeePlayer() == true && this.route[this.route.length - 1].dist(player.p) > 50) {
-                    this.goto(player.p);
-                    document.getElementById("debug").innerHTML += "<br>player left dest, redest";
-                } else if (this.p.dist(this.lastSeen) > 5 && this.route[this.route.length - 1].dist(this.lastSeen) > 5) {
-                    this.goto(this.lastSeen);
-                    document.getElementById("debug").innerHTML += "<br>player left dest, redest to last seen";
-                }
-            }
-        }
         if (this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75 && this.canSeePlayer() == true)) {
             this.route = null;
             this.state = null;
             document.getElementById("debug").innerHTML += "<br>reached dest";
-            if (this.p.dist(player.p) < 77) {
-                this.state = this.aim;
-                document.getElementById("debug").innerHTML += "<br>aim";
-            }
         } else {
             var ne = copyvec2(this.p);
             var n = this.route[0].minus(this.p);
@@ -92,7 +74,7 @@ var Enemy = (function (_super) {
             if (this.p.dist(this.route[0]) < .81)
                 n = n.scale(this.p.dist(this.route[0])); else
                 n = n.scale(.8);
-            this.angle = Math.atan2(n.y, n.x);
+            this.angle = Math.atan2(n.y, n.x) * 180 / Math.PI;
             ne = ne.plus(n);
             this.collideWithWalls(ne);
 
@@ -107,7 +89,7 @@ var Enemy = (function (_super) {
         return raycast(this.p, pt, pts.bottom + 1, this.z + this.height, this.s, pts);
     };
     Enemy.prototype.canSeePlayer = function () {
-        if (key["H"])
+        if (key["H"] || 1)
             return false;
         var r = raycast(this.p, player.p, this.z + this.height, player.z + 1, this.s, player.s);
         if (r == true) {
