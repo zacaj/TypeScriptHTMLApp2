@@ -10,6 +10,7 @@ var Enemy = (function (_super) {
         _super.call(this, p);
         this.height = 5;
         this.route = null;
+        this.walkFrame = 1;
         this.aimFrame = 0;
         this.lastSeen = null;
         this.angle = 0;
@@ -31,7 +32,8 @@ var Enemy = (function (_super) {
                     this.goto(this.lastSeen);
                     document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
                 }
-                this.aimFrame--;
+                if (this.aimFrame > 0)
+                    this.aimFrame--;
             }
             if (key["G"]) {
                 if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50) {
@@ -56,16 +58,24 @@ var Enemy = (function (_super) {
             this.angle = tAngle; else if (tAngle > this.angle)
             this.angle += 5; else
             this.angle -= 5;
+        if (this.aimFrame > 0)
+            this.verticalTrans = .75; else
+            this.verticalTrans = .625;
         if (this.aimFrame < -100 && Math.abs(tAngle - this.angle) < 20) {
             document.getElementById("debug").innerHTML += "<br>firing";
             this.aimFrame = 200;
             var yaw = this.angle + Math.random() * 1.5 - .75;
-            var pitch = 33;
+            var pitch = 35;
             var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(this.p), 1, .7);
             entities.push(arrow);
         }
     };
     Enemy.prototype.navigate = function () {
+        this.walkFrame += .1;
+        if (this.walkFrame >= 5)
+            this.walkFrame -= 4;
+        this.verticalTrans = Math.floor(this.walkFrame) * .125;
+
          {
             if (this.route.length > 0 && this.canSee(this.route[this.route.length - 1]) == true) {
                 if (this.canSeePlayer() == true && this.route[this.route.length - 1].dist(player.p) > 50) {
@@ -92,7 +102,7 @@ var Enemy = (function (_super) {
             if (this.p.dist(this.route[0]) < .81)
                 n = n.scale(this.p.dist(this.route[0])); else
                 n = n.scale(.8);
-            this.angle = Math.atan2(n.y, n.x);
+            this.angle = Math.atan2(n.y, n.x) * 180 / Math.PI;
             ne = ne.plus(n);
             this.collideWithWalls(ne);
 
@@ -161,6 +171,7 @@ var Enemy = (function (_super) {
         }
     };
     Enemy.prototype.goto = function (p) {
+        this.walkFrame = 1;
         var route = new Array();
         p = copyvec2(p);
         var closestWall = getClosestWall(p);

@@ -11,7 +11,8 @@ class Enemy extends Entity3D {
     state: Function;
 
     route: vec2[] = null;
-    dest: vec2;
+	dest: vec2;
+	walkFrame: number = 1;
 
     aimFrame: number=0;
     target: Entity;
@@ -47,7 +48,8 @@ class Enemy extends Entity3D {
 					this.goto(this.lastSeen);
 					document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
 				}
-				this.aimFrame--;
+				if(this.aimFrame>0)
+					this.aimFrame--;
 			}
 			if (key["G"])
 			{
@@ -76,21 +78,29 @@ class Enemy extends Entity3D {
         if (Math.abs(tAngle - this.angle) < 5)
             this.angle = tAngle;
         else if (tAngle > this.angle)
-            this.angle += 5;
-        else
             this.angle -= 5;
+        else
+			this.angle += 5;
+		if (this.aimFrame > 0)
+			this.verticalTrans = .75;
+		else
+			this.verticalTrans = .625;
         if (this.aimFrame < -100 && Math.abs(tAngle - this.angle) < 20)
         {
             document.getElementById("debug").innerHTML += "<br>firing";
             this.aimFrame = 200;
             var yaw = this.angle + Math.random() * 1.5 - .75;
-            var pitch = 33;
-            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(this.p), 1,.7);
+            var pitch = 35;
+            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5).plus(this.p), 1,.7);
             entities.push(arrow);
         }
     }
     navigate()
-    {
+	{
+		this.walkFrame += .1;
+		if (this.walkFrame >= 5)
+			this.walkFrame -= 4;
+		this.verticalTrans = Math.floor(this.walkFrame) * .125;
        // if (key["G"])
         {//can see dest
             if (this.route.length > 0 && this.canSee(this.route[this.route.length - 1])==true)
@@ -117,7 +127,7 @@ class Enemy extends Entity3D {
                 this.state = this.aim;
                 document.getElementById("debug").innerHTML += "<br>aim";
             }
-            }
+        }
         else
         {
             var ne = copyvec2(this.p);
@@ -127,7 +137,7 @@ class Enemy extends Entity3D {
                 n = n.scale(this.p.dist(this.route[0]));
             else
                 n = n.scale(.8);
-            this.angle = Math.atan2(n.y, n.x);
+			this.angle = Math.atan2(n.y, n.x)*180 / Math.PI;
             ne = ne.plus(n);
             this.collideWithWalls(ne);
             //document.getElementById("debug").innerHTML = "" + this.p.x + ", " + this.p.y;
@@ -204,6 +214,7 @@ class Enemy extends Entity3D {
 		}
 	}
 	goto(p: vec2) {
+		this.walkFrame = 1;
 		var route = new Array<vec2>();
 		p = copyvec2(p);
 		var closestWall = getClosestWall(p);
