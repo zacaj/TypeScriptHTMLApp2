@@ -30,6 +30,36 @@
 function copyvec2(p) {
     return new vec2(p.x, p.y);
 }
+function raycast(from, to, z1, z2, fs, ts) {
+    if (!fs)
+        fs = getSector(from);
+    if (!ts)
+        ts = getSector(to);
+    var currentSector = fs;
+    var p = copyvec2(from);
+    var z = z1;
+    var d = to.minus(from).scale(.1);
+    var sectors = [fs];
+    for (var i = 0; i < 10; i++) {
+        p = p.plus(d);
+        if (currentSector.pointIsIn(p) == false) {
+            currentSector = getSector(p);
+            if (sectors.indexOf(currentSector) == -1)
+                sectors.push(currentSector);
+        }
+    }
+    for (var i = 0; i < sectors.length; i++) {
+        for (var j = 0; j < sectors[i].walls.length; j++) {
+            var wall = sectors[i].walls[j];
+            if (lineLine(from, to, sectors[i].walls[j].a, sectors[i].walls[j].b) == true) {
+                if (wall.isPortal == true) {
+                } else
+                    return false;
+            }
+        }
+    }
+    return true;
+}
 var Triangle = (function () {
     function Triangle() {
         this.neighbors = new Array();
@@ -120,7 +150,6 @@ function inverse(m) {
     var det = a0 * b5 - a1 * b4 + a2 * b3 + a3 * b2 - a4 * b1 + a5 * b0;
 
      {
-        //Matrix4 inverse;
         inverse[0] = +m[5] * b5 - m[6] * b4 + m[7] * b3;
         inverse[4] = -m[4] * b5 + m[6] * b2 - m[7] * b1;
         inverse[8] = +m[4] * b4 - m[5] * b2 + m[7] * b0;
@@ -271,12 +300,6 @@ function axisAngle(x, y, z, angle) {
     var s = Math.sin(angle * Math.PI / 180);
     var t = 1. - c;
 
-    //  if axis is not already normalized then uncomment this
-    // double magnitude = Math.sqrt(a1.x*a1.x + a1.y*a1.y + a1.z*a1.z);
-    // if (magnitude==0) throw error;
-    // a1.x /= magnitude;
-    // a1.y /= magnitude;
-    // a1.z /= magnitude;
     m[0] = c + axis.x * axis.x * t;
     m[5] = c + axis.y * axis.y * t;
     m[10] = c + axis.z * axis.z * t;

@@ -31,6 +31,43 @@
 function copyvec2(p: vec2) {
     return new vec2(p.x, p.y);
 }
+function raycast(from: vec2, to: vec2,z1:number,z2:number, fs?: Sector, ts?: Sector):bool
+{
+    if (!fs)
+        fs = getSector(from);
+    if (!ts)
+        ts = getSector(to);
+    var currentSector = fs;
+    var p = copyvec2(from);
+    var d = to.minus(from).scale(.1);
+    var sectors = [fs]
+    for (var i = 0; i < 10; i++)
+    {
+        p = p.plus(d);
+        if (currentSector.pointIsIn(p) == false)
+        {
+            currentSector = getSector(p);
+            if (sectors.indexOf(currentSector) == -1)
+                sectors.push(currentSector);
+        }
+    }
+    for (var i = 0; i < sectors.length; i++)
+    {
+        for (var j = 0; j < sectors[i].walls.length; j++)
+        {
+            var wall = sectors[i].walls[j];
+            if (lineLine(from, to, sectors[i].walls[j].a, sectors[i].walls[j].b) == true)
+            {
+                if (wall.isPortal == true)
+                {
+                    var z=
+                }
+                else return false;
+            }
+        }
+    }
+    return true;
+}
 class Triangle {
     points_: vec2[]
     neighbors: Triangle[]=new Array<Triangle>();
