@@ -31,12 +31,8 @@
 function copyvec2(p: vec2) {
     return new vec2(p.x, p.y);
 }
-function raycast(from: vec2, to: vec2,z1:number,z2:number, fs?: Sector, ts?: Sector):bool
+function raycast(from: vec2, to: vec2,z1:number,z2:number, fs: Sector, ts: Sector):bool
 {
-    if (!fs)
-        fs = getSector(from);
-    if (!ts)
-        ts = getSector(to);
     var currentSector = fs;
     var p = copyvec2(from);
     var d = to.minus(from).scale(.1);
@@ -46,7 +42,9 @@ function raycast(from: vec2, to: vec2,z1:number,z2:number, fs?: Sector, ts?: Sec
         p = p.plus(d);
         if (currentSector.pointIsIn(p) == false)
         {
-            currentSector = getSector(p);
+			currentSector = getSector(p) || getSector(p.plus(d.scale(.01)));
+			if (currentSector == null)
+				return false;
             if (sectors.indexOf(currentSector) == -1)
                 sectors.push(currentSector);
         }
@@ -59,14 +57,43 @@ function raycast(from: vec2, to: vec2,z1:number,z2:number, fs?: Sector, ts?: Sec
             if (lineLine(from, to, sectors[i].walls[j].a, sectors[i].walls[j].b) == true)
             {
                 if (wall.isPortal == true)
-                {
-                    var z=
+				{
+					var ipt = lineLineIntersection(from, to, sectors[i].walls[j].a, sectors[i].walls[j].b);
+					var percent = ipt.dist(from) / to.dist(from);
+					var z = percent * (z2 - z1) + z1;
+					var bottom = Math.max(wall.s.bottom, wall.portal.bottom);
+					var top = Math.min(wall.s.top, wall.portal.top);
+					if (z < bottom || z > top)
+						return false;
                 }
                 else return false;
             }
         }
     }
     return true;
+}
+function lineLineIntersection(ps1: vec2, pe1: vec2, ps2: vec2, pe2: vec2): vec2
+{
+  // Get A,B,C of first line - points : ps1 to pe1
+  var A1 = pe1.y - ps1.y;
+  var B1 = ps1.x - pe1.x;
+  var C1 = A1 * ps1.x + B1 * ps1.y;
+
+  // Get A,B,C of second line - points : ps2 to pe2
+  var A2 = pe2.y - ps2.y;
+  var B2 = ps2.x - pe2.x;
+  var C2 = A2 * ps2.x + B2 * ps2.y;
+
+  // Get delta and check if the lines are parallel
+  var delta = A1 * B2 - A2 * B1;
+	if (delta == 0)
+		return null;
+		
+		// now return the Vector2 intersection point
+		return new vec2(
+			(B2 * C1 - B1 * C2) / delta,
+			(A1 * C2 - A2 * C1) / delta
+			);
 }
 class Triangle {
     points_: vec2[]

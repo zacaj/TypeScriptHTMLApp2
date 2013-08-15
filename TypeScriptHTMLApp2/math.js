@@ -31,19 +31,16 @@ function copyvec2(p) {
     return new vec2(p.x, p.y);
 }
 function raycast(from, to, z1, z2, fs, ts) {
-    if (!fs)
-        fs = getSector(from);
-    if (!ts)
-        ts = getSector(to);
     var currentSector = fs;
     var p = copyvec2(from);
-    var z = z1;
     var d = to.minus(from).scale(.1);
     var sectors = [fs];
     for (var i = 0; i < 10; i++) {
         p = p.plus(d);
         if (currentSector.pointIsIn(p) == false) {
-            currentSector = getSector(p);
+            currentSector = getSector(p) || getSector(p.plus(d.scale(.01)));
+            if (currentSector == null)
+                return false;
             if (sectors.indexOf(currentSector) == -1)
                 sectors.push(currentSector);
         }
@@ -53,12 +50,38 @@ function raycast(from, to, z1, z2, fs, ts) {
             var wall = sectors[i].walls[j];
             if (lineLine(from, to, sectors[i].walls[j].a, sectors[i].walls[j].b) == true) {
                 if (wall.isPortal == true) {
+                    var ipt = lineLineIntersection(from, to, sectors[i].walls[j].a, sectors[i].walls[j].b);
+                    var percent = ipt.dist(from) / to.dist(from);
+                    var z = percent * (z2 - z1) + z1;
+                    var bottom = Math.max(wall.s.bottom, wall.portal.bottom);
+                    var top = Math.min(wall.s.top, wall.portal.top);
+                    if (z < bottom || z > top)
+                        return false;
                 } else
                     return false;
             }
         }
     }
     return true;
+}
+function lineLineIntersection(ps1, pe1, ps2, pe2) {
+    // Get A,B,C of first line - points : ps1 to pe1
+    var A1 = pe1.y - ps1.y;
+    var B1 = ps1.x - pe1.x;
+    var C1 = A1 * ps1.x + B1 * ps1.y;
+
+    // Get A,B,C of second line - points : ps2 to pe2
+    var A2 = pe2.y - ps2.y;
+    var B2 = ps2.x - pe2.x;
+    var C2 = A2 * ps2.x + B2 * ps2.y;
+
+    // Get delta and check if the lines are parallel
+    var delta = A1 * B2 - A2 * B1;
+    if (delta == 0)
+        return null;
+
+    // now return the Vector2 intersection point
+    return new vec2((B2 * C1 - B1 * C2) / delta, (A1 * C2 - A2 * C1) / delta);
 }
 var Triangle = (function () {
     function Triangle() {
@@ -150,6 +173,7 @@ function inverse(m) {
     var det = a0 * b5 - a1 * b4 + a2 * b3 + a3 * b2 - a4 * b1 + a5 * b0;
 
      {
+        //Matrix4 inverse;
         inverse[0] = +m[5] * b5 - m[6] * b4 + m[7] * b3;
         inverse[4] = -m[4] * b5 + m[6] * b2 - m[7] * b1;
         inverse[8] = +m[4] * b4 - m[5] * b2 + m[7] * b0;
@@ -300,6 +324,12 @@ function axisAngle(x, y, z, angle) {
     var s = Math.sin(angle * Math.PI / 180);
     var t = 1. - c;
 
+    //  if axis is not already normalized then uncomment this
+    // double magnitude = Math.sqrt(a1.x*a1.x + a1.y*a1.y + a1.z*a1.z);
+    // if (magnitude==0) throw error;
+    // a1.x /= magnitude;
+    // a1.y /= magnitude;
+    // a1.z /= magnitude;
     m[0] = c + axis.x * axis.x * t;
     m[5] = c + axis.y * axis.y * t;
     m[10] = c + axis.z * axis.z * t;

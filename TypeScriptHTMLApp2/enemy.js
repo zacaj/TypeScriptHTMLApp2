@@ -21,26 +21,29 @@ var Enemy = (function (_super) {
         this.verticalTrans = .75;
     }
     Enemy.prototype.update = function () {
-        if (this.state)
-            this.state(); else {
-            if (this.canSeePlayer() == true) {
-                this.goto(player.p);
-                document.getElementById("debug").innerHTML += "<br>saw player, goto";
-            } else if (this.p.dist(this.lastSeen) > 10) {
-                this.goto(this.lastSeen);
-                document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
+         {
+            if (this.state)
+                this.state(); else {
+                if (this.canSeePlayer() == true) {
+                    this.goto(player.p);
+                    document.getElementById("debug").innerHTML += "<br>saw player, goto";
+                } else if (this.p.dist(this.lastSeen) > 10) {
+                    this.goto(this.lastSeen);
+                    document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
+                }
+                this.aimFrame--;
             }
-            this.aimFrame--;
-        }
-        if (key["G"]) {
-            if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50) {
-                this.goto(player.p);
-                document.getElementById("debug").innerHTML += "<br>force player left dest, redest";
+            if (key["G"]) {
+                if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50) {
+                    this.goto(player.p);
+                    document.getElementById("debug").innerHTML += "<br>force player left dest, redest";
+                }
             }
         }
         _super.prototype.update.call(this);
         if (this.z - this.s.bottom < -.3)
-            this.z += .3;
+            this.z += .3; else if (this.z < this.s.bottom)
+            this.z = this.s.bottom;
     };
     Enemy.prototype.aim = function () {
         if ((this.p.dist(this.target.p) > 80 || this.canSeePlayer() == false) && this.aimFrame < -50) {
@@ -64,8 +67,8 @@ var Enemy = (function (_super) {
     };
     Enemy.prototype.navigate = function () {
          {
-            if (this.route.length > 0 && this.canSeeFrom(this.route[this.route.length - 1], this.p) == true && this.route[this.route.length - 1].dist(player.p) > 50) {
-                if (this.canSeePlayer() == true) {
+            if (this.route.length > 0 && this.canSee(this.route[this.route.length - 1]) == true) {
+                if (this.canSeePlayer() == true && this.route[this.route.length - 1].dist(player.p) > 50) {
                     this.goto(player.p);
                     document.getElementById("debug").innerHTML += "<br>player left dest, redest";
                 } else if (this.p.dist(this.lastSeen) > 5 && this.route[this.route.length - 1].dist(this.lastSeen) > 5) {
@@ -99,12 +102,14 @@ var Enemy = (function (_super) {
                 this.route.splice(0, 1);
         }
     };
-    Enemy.prototype.canSeeFrom = function (pt, from) {
-        var r = getSector(pt) == getSector(from);
-        return r;
+    Enemy.prototype.canSee = function (pt) {
+        var pts = getSector(pt);
+        return raycast(this.p, pt, pts.bottom + 1, this.z + this.height, this.s, pts);
     };
     Enemy.prototype.canSeePlayer = function () {
-        var r = player.s == this.s;
+        if (key["H"])
+            return false;
+        var r = raycast(this.p, player.p, this.z + this.height, player.z + 1, this.s, player.s);
         if (r == true) {
             this.lastSeen = copyvec2(player.p);
             document.getElementById("lastseen").innerHTML = "" + this.lastSeen.x + ", " + this.lastSeen.y;
@@ -158,6 +163,20 @@ var Enemy = (function (_super) {
     Enemy.prototype.goto = function (p) {
         var route = new Array();
         p = copyvec2(p);
+        var closestWall = getClosestWall(p);
+        var closestWallPoint = projectPoint(p, closestWall.a, closestWall.b);
+        var tn = p.minus(this.p);
+        tn.normalize();
+        var perp = new vec2(tn.y, -tn.x);
+        perp.scale(this.r);
+        var closestPathPointToWallPoint = projectPoint(closestWallPoint, p, this.p);
+        var distFromClosestPathPointToWallPointToClosestWallPoint = closestPathPointToWallPoint.dist(closestWallPoint);
+        if (distFromClosestPathPointToWallPointToClosestWallPoint <= this.r) {
+            var percent = distFromClosestPathPointToWallPointToClosestWallPoint / this.r;
+            var shift = perp.scale(percent);
+            p = p.plus(shift);
+        }
+
         var targetSector = getSector(p);
         this.state = this.navigate;
         if (this.s == targetSector) {

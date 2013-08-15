@@ -27,34 +27,42 @@ class Enemy extends Entity3D {
         this.lastSeen = this.p;
         this.verticalTrans = .75;
 	}
-    update() {
-        if (this.state)
-            this.state();
-        else
-        {
-            if (this.canSeePlayer()==true)
-            {
-                this.goto(player.p);
-                document.getElementById("debug").innerHTML += "<br>saw player, goto";
-            }
-            else if (this.p.dist(this.lastSeen) > 10)
-            {
-                this.goto(this.lastSeen);
-                document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
-            }
-            this.aimFrame--;
-        }
-        if (key["G"])
-        {
-            if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50)
-            {
-                this.goto(player.p);
-                document.getElementById("debug").innerHTML += "<br>force player left dest, redest";
-            }
-        }
+	update() {
+		/*document.getElementById("lastseen").innerHTML = "" + raycast(this.p, player.p, this.z + this.height, player.z, this.s, player.s);
+		if (key["G"])
+			this.p = copyvec2(player.p);
+		if (0)*/
+		{
+			if (this.state)
+				this.state();
+			else
+			{
+				if (this.canSeePlayer() == true)
+				{
+					this.goto(player.p);
+					document.getElementById("debug").innerHTML += "<br>saw player, goto";
+				}
+				else if (this.p.dist(this.lastSeen) > 10)
+				{
+					this.goto(this.lastSeen);
+					document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
+				}
+				this.aimFrame--;
+			}
+			if (key["G"])
+			{
+				if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50)
+				{
+					this.goto(player.p);
+					document.getElementById("debug").innerHTML += "<br>force player left dest, redest";
+				}
+			}
+		}
 		super.update();
 		if (this.z - this.s.bottom < -.3)
 			this.z += .3;
+		else if (this.z < this.s.bottom)
+			this.z = this.s.bottom;
     }
     aim()
     {//too far away or cant see player, reloaded
@@ -84,14 +92,15 @@ class Enemy extends Entity3D {
     navigate()
     {
        // if (key["G"])
-        {//can see dest, player not there
-            if (this.route.length > 0 && this.canSeeFrom(this.route[this.route.length - 1],this.p)==true && this.route[this.route.length - 1].dist(player.p) > 50)
-            {
-                if (this.canSeePlayer() == true)
+        {//can see dest
+            if (this.route.length > 0 && this.canSee(this.route[this.route.length - 1])==true)
+			{
+				//player is away from dest, can see them
+				if (this.canSeePlayer() == true && this.route[this.route.length - 1].dist(player.p) > 50)
                 {
                     this.goto(player.p);
                     document.getElementById("debug").innerHTML += "<br>player left dest, redest";
-                }
+                }//cant see them, go to last place we did
                 else if(this.p.dist(this.lastSeen)>5 && this.route[this.route.length-1].dist(this.lastSeen)>5)
                 {
                     this.goto(this.lastSeen);
@@ -127,13 +136,15 @@ class Enemy extends Entity3D {
                 this.route.splice(0, 1);
         }
     }
-    canSeeFrom(pt:vec2,from: vec2): bool
-    {
-        var r = getSector(pt) == getSector(from);
-        return r;
+    canSee(pt:vec2): bool
+	{
+		var pts = getSector(pt);
+		return raycast(this.p, pt, pts.bottom + 1, this.z + this.height, this.s, pts);
     }
-    canSeePlayer(): bool {
-        var r = player.s == this.s;
+	canSeePlayer(): bool {
+		if (key["H"])
+			return false;
+        var r = raycast(this.p,player.p,this.z+this.height,player.z+1,this.s,player.s);
         if (r == true)
         {
             this.lastSeen = copyvec2(player.p);
@@ -195,6 +206,21 @@ class Enemy extends Entity3D {
 	goto(p: vec2) {
 		var route = new Array<vec2>();
 		p = copyvec2(p);
+		var closestWall = getClosestWall(p);
+		var closestWallPoint = projectPoint(p, closestWall.a, closestWall.b);
+		var tn = p.minus(this.p);
+		tn.normalize();
+		var perp = new vec2(tn.y, -tn.x);
+		perp.scale(this.r);
+		var closestPathPointToWallPoint = projectPoint(closestWallPoint, p, this.p);
+		var distFromClosestPathPointToWallPointToClosestWallPoint = closestPathPointToWallPoint.dist(closestWallPoint);
+		if (distFromClosestPathPointToWallPointToClosestWallPoint <= this.r)
+		{
+			var percent = distFromClosestPathPointToWallPointToClosestWallPoint / this.r;
+			var shift = perp.scale(percent);
+			p = p.plus(shift);
+		}
+
         var targetSector = getSector(p);
         this.state = this.navigate;
 		if (this.s == targetSector)

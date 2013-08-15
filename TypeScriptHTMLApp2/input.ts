@@ -9,7 +9,10 @@ window.onkeydown=function(e)
 	if (e.keyCode > 31 && e.keyCode < 129)
 		k = String.fromCharCode(e.keyCode);
 	else if (e.keyCode == 17)
+	{
+		e.preventDefault();
 		k = "ctrl";
+	}
 	else if (e.keyCode == 16)
 		k = "shift";
 	if (k == " ")
@@ -20,6 +23,8 @@ window.onkeydown=function(e)
 	}
 	key[k] = true;
 	keypressed[k] = frame;
+	if (key["ctrl"])
+		e.preventDefault();
 }
 window.onkeyup=function(e)
 {
@@ -27,7 +32,10 @@ window.onkeyup=function(e)
 	if (e.keyCode > 31 && e.keyCode < 129)
 		k = String.fromCharCode(e.keyCode);
 	else if (e.keyCode == 17)
+	{
+		e.preventDefault();
 		k = "ctrl";
+	}
 	else if (e.keyCode == 16)
 		k = "shift";
 	if (k == " ")
@@ -37,7 +45,9 @@ window.onkeyup=function(e)
 		crosshair.p = new vec2(1024 / 2, 768 / 2);
 		return;
 	}
-    delete key[k];
+	delete key[k];
+	if (key["ctrl"])
+		e.preventDefault();
 }
 function monmousemove(e: MouseEvent) {
 	e.preventDefault();

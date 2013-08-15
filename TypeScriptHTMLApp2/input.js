@@ -7,8 +7,10 @@ var frame = false;
 window.onkeydown = function (e) {
     var k;
     if (e.keyCode > 31 && e.keyCode < 129)
-        k = String.fromCharCode(e.keyCode); else if (e.keyCode == 17)
-        k = "ctrl"; else if (e.keyCode == 16)
+        k = String.fromCharCode(e.keyCode); else if (e.keyCode == 17) {
+        e.preventDefault();
+        k = "ctrl";
+    } else if (e.keyCode == 16)
         k = "shift";
     if (k == " ") {
         e.preventDefault();
@@ -17,12 +19,16 @@ window.onkeydown = function (e) {
     }
     key[k] = true;
     keypressed[k] = frame;
+    if (key["ctrl"])
+        e.preventDefault();
 };
 window.onkeyup = function (e) {
     var k;
     if (e.keyCode > 31 && e.keyCode < 129)
-        k = String.fromCharCode(e.keyCode); else if (e.keyCode == 17)
-        k = "ctrl"; else if (e.keyCode == 16)
+        k = String.fromCharCode(e.keyCode); else if (e.keyCode == 17) {
+        e.preventDefault();
+        k = "ctrl";
+    } else if (e.keyCode == 16)
         k = "shift";
     if (k == " ") {
         e.preventDefault();
@@ -31,6 +37,8 @@ window.onkeyup = function (e) {
         return;
     }
     delete key[k];
+    if (key["ctrl"])
+        e.preventDefault();
 };
 function monmousemove(e) {
     e.preventDefault();

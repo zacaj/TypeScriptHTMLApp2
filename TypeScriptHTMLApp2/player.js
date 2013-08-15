@@ -31,7 +31,7 @@ var Player = (function (_super) {
         var moveSpeed = 1;
         if (aiming == true)
             aimScale = .03;
-        if (key["ctrl"]) {
+        if (key["C"]) {
             this.height = 3;
             moveSpeed = .5;
         } else {
@@ -60,7 +60,8 @@ var Player = (function (_super) {
             this.p = n; else
             this.collideWithWalls(n);
         if (this.z - this.s.bottom < -.3)
-            this.z += .3;
+            this.z += .3; else if (this.z < this.s.bottom)
+            this.z = this.s.bottom;
         _super.prototype.update.call(this);
         this.vpa.x = this.p.x + Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * 10000;
         this.vpa.y = this.p.y + Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * 10000;

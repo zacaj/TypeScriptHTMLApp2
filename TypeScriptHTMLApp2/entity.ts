@@ -10,8 +10,8 @@ class Entity {
 	remove = false;
 	update() {
 		if(this.s)
-		if (this.z - this.s.bottom > this.gravity)
-			this.z -= this.gravity;
+			if (this.z - this.s.bottom > this.gravity)
+				this.z -= this.gravity;
 	}
     constructor(p: vec2) {
         this.z = 0;

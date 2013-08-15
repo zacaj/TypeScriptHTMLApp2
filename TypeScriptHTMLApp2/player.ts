@@ -19,7 +19,7 @@ class Player extends Entity3D {
 		var moveSpeed = 1;
 		if (aiming == true)
 			aimScale = .03;
-		if (key["ctrl"])
+		if (key["C"])
 		{
 			this.height = 3;
 			moveSpeed = .5;
@@ -57,6 +57,8 @@ class Player extends Entity3D {
 		this.collideWithWalls(n);
 		if (this.z - this.s.bottom < -.3)
 			this.z += .3;
+		else if (this.z < this.s.bottom)
+			this.z = this.s.bottom;
 		super.update();
 		this.vpa.x=this.p.x+Math.cos(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
 		this.vpa.y = this.p.y+Math.sin(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
