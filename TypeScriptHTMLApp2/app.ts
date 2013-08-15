@@ -72,7 +72,7 @@ class Sector {
 		gl.uniform4f(ColorPosition, this.ceilingColor.r, this.ceilingColor.g , this.ceilingColor.b,1);
 		gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
 		gl.uniform1f(TransPosition, 0);
-		for (var i = 0; i < this.tris.length; i++)
+		/*for (var i = 0; i < this.tris.length; i++)
 		{
 			var k = this.tris[i].neighbors.length;
 			for (var j = 0; j < k; j++)
@@ -80,7 +80,7 @@ class Sector {
 				line(this.tris[i].center, this.tris[i].neighbors[j].center, this.bottom, this.bottom, 255, 255, 255);
 
 			}
-		}
+		}*/
 
 	}
 	createBuffers() {
