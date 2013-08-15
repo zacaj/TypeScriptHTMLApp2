@@ -110,7 +110,7 @@ class Arrow extends Entity3D {
 	v: vec2;
 	vz: number;
 	stuck = false;
-	constructor(yaw: number, pitch: number, p: vec2,z:number) {
+	constructor(yaw: number, pitch: number, p: vec2,z:number,speed:number) {
 		super(p);
 		this.angle =yaw;
 		yaw = yaw * Math.PI / 180;
@@ -125,7 +125,7 @@ class Arrow extends Entity3D {
 		this.tex=getTex("arrows.png");
 		this.nSide = 16;
 		this.z = z;
-		this.v.scale(.08);
+		this.v.scale(speed);
 		this.vz *= .8;
 	}
 	update() {
@@ -138,13 +138,14 @@ class Arrow extends Entity3D {
 			var i;
 			if (p > .99)
 				i = 0;
-			else if (p > .8)
+			else if (p > .94)
 				i = 1;
-			else if (p > .45)
+			else if (p > .2)
 				i = 2;
 			else i = 3;
-			if (this.vz>=0)
-				i = 6 - i;
+			if (this.vz<=0)
+                i = 6 - i;
+            i=6-i+1;
 			this.verticalTrans = i * .125;
 
 			var n = this.p.plus(this.v);

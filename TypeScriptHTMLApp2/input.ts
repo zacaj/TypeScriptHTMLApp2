@@ -109,7 +109,7 @@ function monmouseup(e: MouseEvent) {
 		{
 			var yaw = (crosshair.p.x / 1024 - .5) * 111 + player.angle + Math.random() * 2 - 1;
 			var pitch = ((1 - (crosshair.p.y / 768)) * 2 - 1) * 90 + Math.random() * 2 - 1;
-			var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(player.angle * Math.PI / 180 - Math.PI / 2)*2.5).plus(player.p),1);
+			var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(player.angle * Math.PI / 180 - Math.PI / 2)*2.5).plus(player.p),1,.08);
 			entities.push(arrow);
 		}
 

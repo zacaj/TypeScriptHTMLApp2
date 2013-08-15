@@ -58,12 +58,6 @@ var Sector = (function () {
         gl.uniform4f(ColorPosition, this.ceilingColor.r, this.ceilingColor.g, this.ceilingColor.b, 1);
         gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
         gl.uniform1f(TransPosition, 0);
-        for (var i = 0; i < this.tris.length; i++) {
-            var k = this.tris[i].neighbors.length;
-            for (var j = 0; j < k; j++) {
-                line(this.tris[i].center, this.tris[i].neighbors[j].center, this.bottom, this.bottom, 255, 255, 255);
-            }
-        }
     };
     Sector.prototype.createBuffers = function () {
         var floorVerts = new Array();
@@ -446,7 +440,7 @@ function isLeft(a, b, c) {
 }
 var lines, at;
 function load(str) {
-    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_SS_NPC01.png", 128, 0, "arrows.png", 256, 256, "LB_Target.png", 44, 44, "LB_Grass02.png", 78, 122, "LB_Grass01.png", 91, 128, "LB_Button01Off.png", 11, 11, "LB_Button01On.png", 11, 11];
+    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_NPC03.png", 128, 128, "arrows.png", 256, 256, "LB_Target.png", 44, 44, "LB_Grass02.png", 78, 122, "LB_Grass01.png", 91, 128, "LB_Button01Off.png", 11, 11, "LB_Button01On.png", 11, 11];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);

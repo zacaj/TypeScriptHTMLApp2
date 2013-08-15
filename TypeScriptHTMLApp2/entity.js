@@ -107,7 +107,7 @@ var BillboardEntity = (function (_super) {
 })(Entity);
 var Arrow = (function (_super) {
     __extends(Arrow, _super);
-    function Arrow(yaw, pitch, p, z) {
+    function Arrow(yaw, pitch, p, z, speed) {
         _super.call(this, p);
         this.stuck = false;
         this.angle = yaw;
@@ -123,7 +123,7 @@ var Arrow = (function (_super) {
         this.tex = getTex("arrows.png");
         this.nSide = 16;
         this.z = z;
-        this.v.scale(.08);
+        this.v.scale(speed);
         this.vz *= .8;
     }
     Arrow.prototype.update = function () {
@@ -134,12 +134,13 @@ var Arrow = (function (_super) {
             var p = Math.abs(this.vz) / Math.sqrt(this.v.x * this.v.x + this.v.y * this.v.y + this.vz * this.vz);
             var i;
             if (p > .99)
-                i = 0; else if (p > .8)
-                i = 1; else if (p > .45)
+                i = 0; else if (p > .94)
+                i = 1; else if (p > .2)
                 i = 2; else
                 i = 3;
-            if (this.vz >= 0)
+            if (this.vz <= 0)
                 i = 6 - i;
+            i = 6 - i + 1;
             this.verticalTrans = i * .125;
 
             var n = this.p.plus(this.v);

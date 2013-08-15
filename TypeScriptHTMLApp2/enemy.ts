@@ -7,44 +7,125 @@ interface Node {
 	neighbors;
 }
 class Enemy extends Entity3D {
-	route: vec2[] = null;
-	height = 5;
+    height = 5;
+    state: Function;
+
+    route: vec2[] = null;
+    dest: vec2;
+
+    aimFrame: number=0;
+    target: Entity;
+
+    lastSeen: vec2 = null;
 	constructor(p: vec2) {
 		super(p);
 		this.angle = 0;
 		this.nSide = 8;
-		this.tex = getTex("LB_SS_NPC01.png");
-		this.r = 1.5;
+        this.tex = getTex("LB_NPC03.png");
+        this.r = 1.5;
+        this.target = player;
+        this.lastSeen = this.p;
+        this.verticalTrans = .75;
 	}
-	update() {
-		if (this.route)
-		{
-			if (this.route.length == 0)
-				this.route = null;
-			else
-			{
-				var ne = copyvec2(this.p);
-				var n = this.route[0].minus(this.p);
-				n.normalize();
-				if (this.p.dist(this.route[0]) < .81)
-					n=n.scale(this.p.dist(this.route[0]));
-				else
-					n = n.scale(.8);
-				this.angle = Math.atan2(n.y, n.x);
-				ne = ne.plus(n);
-				this.collideWithWalls(ne);
-				document.getElementById("debug").innerHTML = "" + this.p.x + ", " + this.p.y;
-				var d = this.p.dist(this.route[0]);
-				if ( d< .1)
-					this.route.splice(0, 1);
-			}
-		}
+    update() {
+        if (this.state)
+            this.state();
+        else
+        {
+            if (this.canSeePlayerFrom(this.p)==true)
+            {
+                this.goto(player.p);
+                document.getElementById("debug").innerHTML += "<br>saw player, goto";
+            }
+            else if (this.p.dist(this.lastSeen) > 10)
+            {
+                this.goto(this.lastSeen);
+                document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
+            }
+            this.aimFrame--;
+        }
+        if (key["G"])
+        {
+            if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50)
+            {
+                this.goto(player.p);
+                document.getElementById("debug").innerHTML += "<br>force player left dest, redest";
+            }
+        }
 		super.update();
 		if (this.z - this.s.bottom < -.3)
 			this.z += .3;
-		if (keypressed["G"])
-			this.goto(player.p);
-	}
+    }
+    aim()
+    {
+        if ((this.p.dist(this.target.p) > 80 || this.canSeePlayerFrom(this.p)==false) && this.aimFrame<-50)
+        {
+            document.getElementById("debug").innerHTML += "<br>too far from target";
+            this.goto(this.lastSeen);
+        }
+        this.aimFrame--;
+        var tAngle = Math.atan2(this.target.p.y - this.p.y, this.target.p.x - this.p.x)*180/Math.PI;
+        if (Math.abs(tAngle - this.angle) < 5)
+            this.angle = tAngle;
+        else if (tAngle > this.angle)
+            this.angle += 5;
+        else
+            this.angle -= 5;
+        if (this.aimFrame < -100 && Math.abs(tAngle - this.angle) < 20)
+        {
+            document.getElementById("debug").innerHTML += "<br>firing";
+            this.aimFrame = 200;
+            var yaw = this.angle + Math.random() * 1.5 - .75;
+            var pitch = 30;
+            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(this.p), 1,.6);
+            entities.push(arrow);
+        }
+    }
+    navigate()
+    {
+       // if (key["G"])
+        {
+            if (this.route[this.route.length - 1].dist(player.p) > 50)
+            {
+                this.goto(player.p);
+                document.getElementById("debug").innerHTML += "<br>player left dest, redest";
+            }
+        }
+        if (this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75 && this.canSeePlayerFrom(this.p)==true))
+        {
+            this.route = null;
+            this.state = null; document.getElementById("debug").innerHTML += "<br>reached dest";
+            if (this.p.dist(player.p) < 77)
+            {
+                this.state = this.aim;
+                document.getElementById("debug").innerHTML += "<br>aim";
+            }
+            }
+        else
+        {
+            var ne = copyvec2(this.p);
+            var n = this.route[0].minus(this.p);
+            n.normalize();
+            if (this.p.dist(this.route[0]) < .81)
+                n = n.scale(this.p.dist(this.route[0]));
+            else
+                n = n.scale(.8);
+            this.angle = Math.atan2(n.y, n.x);
+            ne = ne.plus(n);
+            this.collideWithWalls(ne);
+            //document.getElementById("debug").innerHTML = "" + this.p.x + ", " + this.p.y;
+            var d = this.p.dist(this.route[0]);
+            if (d < .1)
+                this.route.splice(0, 1);
+        }
+    }
+    canSeePlayerFrom(p: vec2): bool
+    {
+        var r = getSector(p) == player.s;
+        if (r == true)
+            this.lastSeen = copyvec2(player.p);
+        return r;
+    }
 	recursiveSearch(path, target) {
 		var s = path[path.length - 1];
 		for (var i = 0; i < s.neighbors.length; i++)
@@ -99,7 +180,8 @@ class Enemy extends Entity3D {
 	goto(p: vec2) {
 		var route = new Array<vec2>();
 		p = copyvec2(p);
-		var targetSector = getSector(p);
+        var targetSector = getSector(p);
+        this.state = this.navigate;
 		if (this.s == targetSector)
 		{
 			this.pathfindInSector(this.p, p, null, targetSector,null, route);
