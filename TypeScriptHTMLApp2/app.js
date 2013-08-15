@@ -57,6 +57,10 @@ var Sector = (function () {
         gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
         gl.uniform4f(ColorPosition, this.ceilingColor.r, this.ceilingColor.g, this.ceilingColor.b, 1);
         gl.drawArrays(gl.TRIANGLES, 0, this.tris.length * 3);
+        for (var i = 0; i < this.tris.length; i++) {
+            for (var j = 0; j < this.tris[i].neighbors.length; j++) {
+            }
+        }
         gl.uniform1f(TransPosition, 0);
     };
     Sector.prototype.createBuffers = function () {
@@ -211,6 +215,20 @@ function quad(a, b, bottom, top, tex) {
     gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
     gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+
+function line(a, b, bottom, top, r, g, bb) {
+    gl.uniform1f(MultPosition, 0);
+    gl.uniform1f(TransPosition, 0);
+    gl.uniform4f(ColorPosition, r, g, bb, 1);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertBuffer);
+    gl.vertexAttribPointer(VertexPositionTex, 3, gl.FLOAT, false, 0, 0);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([a.x, top, a.y, b.x, bottom, b.y]), gl.STREAM_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+    gl.vertexAttribPointer(VertexTexture, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.LINES, 0, 2);
+    gl.uniform1f(MultPosition, 1);
+    gl.uniform4f(ColorPosition, 0, 0, 0, 0);
 }
 var loadedTextures = new Object();
 function getTex(name) {
