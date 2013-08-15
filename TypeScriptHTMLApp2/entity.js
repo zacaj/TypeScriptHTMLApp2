@@ -134,7 +134,7 @@ var Arrow = (function (_super) {
             var p = Math.abs(this.vz) / Math.sqrt(this.v.x * this.v.x + this.v.y * this.v.y + this.vz * this.vz);
             var i;
             if (p > .99)
-                i = 0; else if (p > .94)
+                i = 0; else if (p > .96)
                 i = 1; else if (p > .2)
                 i = 2; else
                 i = 3;

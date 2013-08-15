@@ -32,7 +32,7 @@ class Enemy extends Entity3D {
             this.state();
         else
         {
-            if (this.canSeePlayerFrom(this.p)==true)
+            if (this.canSeePlayer()==true)
             {
                 this.goto(player.p);
                 document.getElementById("debug").innerHTML += "<br>saw player, goto";
@@ -57,8 +57,8 @@ class Enemy extends Entity3D {
 			this.z += .3;
     }
     aim()
-    {
-        if ((this.p.dist(this.target.p) > 80 || this.canSeePlayerFrom(this.p)==false) && this.aimFrame<-50)
+    {//too far away or cant see player, reloaded
+        if ((this.p.dist(this.target.p) > 80 || this.canSeePlayer()==false) && this.aimFrame<-50)
         {
             document.getElementById("debug").innerHTML += "<br>too far from target";
             this.goto(this.lastSeen);
@@ -76,22 +76,30 @@ class Enemy extends Entity3D {
             document.getElementById("debug").innerHTML += "<br>firing";
             this.aimFrame = 200;
             var yaw = this.angle + Math.random() * 1.5 - .75;
-            var pitch = 30;
-            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(this.p), 1,.6);
+            var pitch = 33;
+            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(this.p), 1,.7);
             entities.push(arrow);
         }
     }
     navigate()
     {
        // if (key["G"])
-        {
-            if (this.route[this.route.length - 1].dist(player.p) > 50)
+        {//can see dest, player not there
+            if (this.route.length > 0 && this.canSeeFrom(this.route[this.route.length - 1],this.p)==true && this.route[this.route.length - 1].dist(player.p) > 50)
             {
-                this.goto(player.p);
-                document.getElementById("debug").innerHTML += "<br>player left dest, redest";
+                if (this.canSeePlayer() == true)
+                {
+                    this.goto(player.p);
+                    document.getElementById("debug").innerHTML += "<br>player left dest, redest";
+                }
+                else if(this.p.dist(this.lastSeen)>5 && this.route[this.route.length-1].dist(this.lastSeen)>5)
+                {
+                    this.goto(this.lastSeen);
+                    document.getElementById("debug").innerHTML += "<br>player left dest, redest to last seen";
+                }
             }
-        }
-        if (this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75 && this.canSeePlayerFrom(this.p)==true))
+        }//arrived at dest, see player
+        if (this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75 && this.canSeePlayer()==true))
         {
             this.route = null;
             this.state = null; document.getElementById("debug").innerHTML += "<br>reached dest";
@@ -119,11 +127,18 @@ class Enemy extends Entity3D {
                 this.route.splice(0, 1);
         }
     }
-    canSeePlayerFrom(p: vec2): bool
+    canSeeFrom(pt:vec2,from: vec2): bool
     {
-        var r = getSector(p) == player.s;
+        var r = getSector(pt) == getSector(from);
+        return r;
+    }
+    canSeePlayer(): bool {
+        var r = player.s == this.s;
         if (r == true)
+        {
             this.lastSeen = copyvec2(player.p);
+            document.getElementById("lastseen").innerHTML = "" + this.lastSeen.x + ", " + this.lastSeen.y;
+        }
         return r;
     }
 	recursiveSearch(path, target) {
