@@ -17,6 +17,7 @@ class Enemy extends Entity3D {
     aimFrame: number=0;
 	target: Entity;
 	targetAngle: number;
+	lastTargetAngle: number;
 	speed = 1;
 
 	lastSeen: vec2 = null;
@@ -112,12 +113,17 @@ class Enemy extends Entity3D {
 			this.verticalTrans = .625;
         if (this.aimFrame < -100 && Math.abs(angleBetween(tAngle , this.angle)) < 20)
 		{document.getElementById("debug").innerHTML += "<br>firing";
-            this.aimFrame = 250;
-            var yaw = this.angle + Math.random() * 1.5 - .75;
+			this.aimFrame = 250;
+
+			var t = this.target.p.dist(pos) / 2;
+			
+
+			var yaw = this.angle +(tAngle-this.lastTargetAngle)*t+Math.random() * 1.5 - .75;
             var pitch = 15+Math.random()*1.5-.75;
             var arrow = new Arrow(yaw, pitch, pos, this.z+4-5,2);
             entities.push(arrow);
-        }
+		}
+		this.lastTargetAngle = tAngle;
     }
     navigate()
 	{

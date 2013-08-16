@@ -93,7 +93,7 @@ var HPMeter = (function (_super) {
     HPMeter.prototype.draw = function () {
         for (var i = 0; i < player.hp; i++) {
             _super.prototype.draw.call(this);
-            this.p.x += 40;
+            this.p.x += 45;
         }
         this.p.x = 30;
     };

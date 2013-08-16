@@ -87,11 +87,15 @@ var Enemy = (function (_super) {
         if (this.aimFrame < -100 && Math.abs(angleBetween(tAngle, this.angle)) < 20) {
             document.getElementById("debug").innerHTML += "<br>firing";
             this.aimFrame = 250;
-            var yaw = this.angle + Math.random() * 1.5 - .75;
+
+            var t = this.target.p.dist(pos) / 2;
+
+            var yaw = this.angle + (tAngle - this.lastTargetAngle) * t;
             var pitch = 15 + Math.random() * 1.5 - .75;
             var arrow = new Arrow(yaw, pitch, pos, this.z + 4 - 5, 2);
             entities.push(arrow);
         }
+        this.lastTargetAngle = tAngle;
     };
     Enemy.prototype.navigate = function () {
         this.walkFrame += .1;
