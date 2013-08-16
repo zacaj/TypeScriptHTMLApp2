@@ -13,27 +13,44 @@ var Enemy = (function (_super) {
         this.walkFrame = 1;
         this.aimFrame = 0;
         this.lastSeen = null;
+        this.idleTime = 400;
         this.angle = 0;
+        this.targetAngle = 0;
         this.nSide = 8;
         this.tex = getTex("LB_NPC03.png");
         this.r = 1.5;
         this.target = player;
-        this.lastSeen = this.p;
         this.verticalTrans = .75;
     }
+    Enemy.prototype.turnTowards = function (angle) {
+        var a = angleBetween(angle, this.angle);
+        if (a > 0)
+            this.angle += 5; else
+            this.angle -= 5;
+    };
     Enemy.prototype.update = function () {
          {
             if (this.state)
                 this.state(); else {
+                this.verticalTrans = .75;
                 if (this.canSeePlayer() == true) {
                     this.goto(player.p);
                     document.getElementById("debug").innerHTML += "<br>saw player, goto";
-                } else if (this.p.dist(this.lastSeen) > 10) {
+                } else if (this.lastSeen != null && this.p.dist(this.lastSeen) > 10 && !key["H"]) {
                     this.goto(this.lastSeen);
                     document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
                 }
                 if (this.aimFrame > 0)
                     this.aimFrame--;
+                this.idleTime--;
+                if (this.idleTime < 0) {
+                    this.idleTime = 300 + Math.random() * 600;
+                    if (Math.random() > .7)
+                        this.goto(this.s.tris[Math.floor(Math.random() * this.s.tris.length)].center); else
+                        this.targetAngle = Math.random() * 360;
+                }
+                if (Math.abs(angleBetween(this.angle, this.targetAngle)) > 5)
+                    this.turnTowards(this.targetAngle);
             }
             if (key["G"]) {
                 if (!this.route || this.route[this.route.length - 1].dist(player.p) > 50) {
@@ -54,19 +71,18 @@ var Enemy = (function (_super) {
         }
         this.aimFrame--;
         var tAngle = Math.atan2(this.target.p.y - this.p.y, this.target.p.x - this.p.x) * 180 / Math.PI;
-        if (Math.abs(tAngle - this.angle) < 5)
-            this.angle = tAngle; else if (tAngle > this.angle)
-            this.angle += 5; else
-            this.angle -= 5;
+        if (Math.abs(angleBetween(this.angle, tAngle)) < 5)
+            this.angle = tAngle; else
+            this.turnTowards(tAngle);
         if (this.aimFrame > 0)
             this.verticalTrans = .75; else
             this.verticalTrans = .625;
-        if (this.aimFrame < -100 && Math.abs(tAngle - this.angle) < 20) {
+        if (this.aimFrame < -100 && Math.abs(angleBetween(tAngle, this.angle)) < 20) {
             document.getElementById("debug").innerHTML += "<br>firing";
-            this.aimFrame = 200;
+            this.aimFrame = 250;
             var yaw = this.angle + Math.random() * 1.5 - .75;
-            var pitch = 35;
-            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(this.p), 1, .7);
+            var pitch = 32;
+            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5).plus(this.p), 1, .85);
             entities.push(arrow);
         }
     };
@@ -81,17 +97,17 @@ var Enemy = (function (_super) {
                 if (this.canSeePlayer() == true && this.route[this.route.length - 1].dist(player.p) > 50) {
                     this.goto(player.p);
                     document.getElementById("debug").innerHTML += "<br>player left dest, redest";
-                } else if (this.p.dist(this.lastSeen) > 5 && this.route[this.route.length - 1].dist(this.lastSeen) > 5) {
+                } else if (this.lastSeen != null && this.p.dist(this.lastSeen) > 5 && this.route[this.route.length - 1].dist(this.lastSeen) > 5 && !key["H"]) {
                     this.goto(this.lastSeen);
                     document.getElementById("debug").innerHTML += "<br>player left dest, redest to last seen";
                 }
             }
         }
-        if (this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75 && this.canSeePlayer() == true)) {
+        if ((this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75))) {
             this.route = null;
             this.state = null;
             document.getElementById("debug").innerHTML += "<br>reached dest";
-            if (this.p.dist(player.p) < 77) {
+            if (this.p.dist(player.p) < 77 && this.canSeePlayer() == true && !key["H"]) {
                 this.state = this.aim;
                 document.getElementById("debug").innerHTML += "<br>aim";
             }
@@ -99,17 +115,21 @@ var Enemy = (function (_super) {
             var ne = copyvec2(this.p);
             var n = this.route[0].minus(this.p);
             n.normalize();
-            if (this.p.dist(this.route[0]) < .81)
+            if (this.p.dist(this.route[0]) < 1.01)
                 n = n.scale(this.p.dist(this.route[0])); else
-                n = n.scale(.8);
+                n = n.scale(1);
             this.angle = Math.atan2(n.y, n.x) * 180 / Math.PI;
+            if (isNaN(this.angle) == true)
+                var i;
             ne = ne.plus(n);
             this.collideWithWalls(ne);
 
             //document.getElementById("debug").innerHTML = "" + this.p.x + ", " + this.p.y;
             var d = this.p.dist(this.route[0]);
-            if (d < .1)
+            if (d < .1) {
+                this.p = this.route[0];
                 this.route.splice(0, 1);
+            }
         }
     };
     Enemy.prototype.canSee = function (pt) {
@@ -118,6 +138,9 @@ var Enemy = (function (_super) {
     };
     Enemy.prototype.canSeePlayer = function () {
         if (key["H"])
+            return false;
+        var a = Math.abs(Math.atan2(player.p.y - this.p.y, player.p.x - this.p.x)) * 180 / Math.PI;
+        if (Math.abs(angleBetween(a, this.angle)) > 40)
             return false;
         var r = raycast(this.p, player.p, this.z + this.height, player.z + 1, this.s, player.s);
         if (r == true) {
@@ -171,6 +194,8 @@ var Enemy = (function (_super) {
         }
     };
     Enemy.prototype.goto = function (p) {
+        if (p.dist(this.p) < .1)
+            return;
         this.walkFrame = 1;
         var route = new Array();
         p = copyvec2(p);

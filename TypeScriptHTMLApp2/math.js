@@ -356,4 +356,10 @@ function lineLine(a, b, c, d) {
         return true; else
         return false;
 }
+
+function angleBetween(x, y) {
+    x = x * Math.PI / 180;
+    y = y * Math.PI / 180;
+    return Math.atan2(Math.sin(x - y), Math.cos(x - y)) * 180 / Math.PI;
+}
 //@ sourceMappingURL=math.js.map

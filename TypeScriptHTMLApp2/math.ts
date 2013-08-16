@@ -338,3 +338,10 @@ function lineLine(a: vec2, b: vec2, c: vec2, d: vec2): bool {
 	else
 		return false;
 }
+
+function angleBetween(x: number, y: number): number {
+	
+	x = x * Math.PI / 180;
+	y = y * Math.PI / 180;
+	return Math.atan2(Math.sin(x - y), Math.cos(x - y))*180/Math.PI;	
+}

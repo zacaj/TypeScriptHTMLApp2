@@ -87,6 +87,10 @@ class Entity3D extends Entity {
 		gl.uniform2f(TranPosition, 0, 0);
 	}
 	update() {
+		if (this.angle < 0)
+			this.angle += 360;
+		if (this.angle >= 360)
+			this.angle -= 360;
 		super.update();
 	}
 }
