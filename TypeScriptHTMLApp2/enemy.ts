@@ -7,7 +7,7 @@ interface Node {
 	neighbors;
 }
 class Enemy extends Entity3D {
-    height = 5;
+    height = 5.6;
     state: Function;
 
     route: vec2[] = null;
@@ -17,6 +17,7 @@ class Enemy extends Entity3D {
     aimFrame: number=0;
 	target: Entity;
 	targetAngle: number;
+	speed = 1;
 
 	lastSeen: vec2 = null;
 	idleTime: number = 400;
@@ -47,15 +48,18 @@ class Enemy extends Entity3D {
 				this.state();
 			else
 			{
+				this.speed = .5;
 				this.verticalTrans = .75;
 				if (this.canSeePlayer() == true)
 				{
 					this.goto(player.p);
+					this.speed = 1;
 					document.getElementById("debug").innerHTML += "<br>saw player, goto";
 				}
 				else if (this.lastSeen!=null && this.p.dist(this.lastSeen) > 10 && !key["H"])
 				{
 					this.goto(this.lastSeen);
+					this.speed = 1;
 					document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
 				}
 				if(this.aimFrame>0)
@@ -91,7 +95,8 @@ class Enemy extends Entity3D {
     {//too far away or cant see player, reloaded
         if ((this.p.dist(this.target.p) > 80 || this.canSeePlayer()==false) && this.aimFrame<-50)
         {
-            document.getElementById("debug").innerHTML += "<br>too far from target";
+			document.getElementById("debug").innerHTML += "<br>too far from target";
+			this.speed = 1;
             this.goto(this.lastSeen);
         }
 		this.aimFrame--;
@@ -156,7 +161,7 @@ class Enemy extends Entity3D {
             if (this.p.dist(this.route[0]) < 1.01)
                 n = n.scale(this.p.dist(this.route[0]));
             else
-                n = n.scale(1);
+                n = n.scale(this.speed);
 			this.angle = Math.atan2(n.y, n.x) * 180 / Math.PI;
 			if (isNaN(this.angle) == true)
 				var i;
@@ -307,5 +312,25 @@ class Enemy extends Entity3D {
 			this.pathfindInSector(lastWaypoint, p, null, targetSector, lastSector, route);
 			this.route = route;
 		}
+	}
+	die() {
+		if (this.state == this.death)
+			return;
+		this.state = this.death;
+		this.verticalTrans = 0;
+		this.idleTime = 0;
+		this.tex = getTex("npcdead.png");
+		this.nSide = 1;
+	}
+
+	death() {
+		if (this.idleTime < 148)
+		{
+			this.idleTime+=1.3;
+			this.verticalTrans = 1 - (Math.floor(this.idleTime / 150 * 6) +1) * .125;
+		}
+	}
+	shot(by) {
+		this.die();
 	}
 }

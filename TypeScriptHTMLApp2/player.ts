@@ -5,7 +5,8 @@ var player: Player;
 class Player extends Entity3D {
 	height = 5;
 	vpa: vec2=new vec2(0,0);//view plane
-	vpb: vec2=new vec2(0,0);
+	vpb: vec2 = new vec2(0, 0);
+	hp = 3;
 	update() {
 		if (aiming == false)
 		{
@@ -72,5 +73,30 @@ class Player extends Entity3D {
         player = this;
 		this.z = 0;
 		this.r = 1.5;
-    }
+		guis.push(new HPMeter());
+	}
+	shot(by) {
+		this.hp--;
+		if (this.hp <= 0)
+		{
+			this.hp = 0;
+		}
+	}
+}
+
+class HPMeter extends GUI {
+	constructor() {
+		super();
+		this.p = new vec2(30, 738);
+		this.tex = getTex("LB_Health.png");
+		this.d = new vec2(30, 24);
+	}
+	draw() {
+		for (var i = 0; i < player.hp; i++)
+		{
+			super.draw();
+			this.p.x += 45;
+		}
+		this.p.x = 30;
+	}
 }

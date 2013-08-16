@@ -93,6 +93,8 @@ class Entity3D extends Entity {
 			this.angle -= 360;
 		super.update();
 	}
+	shot(by) {
+		document.getElementById("debug").innerHTML += "<br>AARARAURARRRGG";}
 }
 class BillboardEntity extends Entity {
 	tex: Texture;
@@ -153,6 +155,21 @@ class Arrow extends Entity3D {
 			this.verticalTrans = i * .125;
 
 			var n = this.p.plus(this.v);
+			for (var i = 0; i < entities.length; i++)
+			{
+				if ((<any>entities[i]).height)
+				{
+					var e = <Entity3D>entities[i];
+					if (this.p.dist(e.p) < e.r)
+					{
+						if (this.z + this.d.y * .125 + this.d.y * .875 / 2 < e.z + (<any>e).height && this.z + this.d.y * .875 / 2 + this.d.y * .125 > e.z)
+						{
+							e.shot(this);
+							this.remove = true;
+						}
+					}
+				}
+			}
 			if (this.collideWithWalls(n) == true)
 				this.stuck = true;
 			if (this.z + this.d.y * .125+ this.d.y * .875 / 2 < this.s.bottom)

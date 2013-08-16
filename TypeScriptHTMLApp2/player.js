@@ -15,9 +15,11 @@ var Player = (function (_super) {
         this.height = 5;
         this.vpa = new vec2(0, 0);
         this.vpb = new vec2(0, 0);
+        this.hp = 3;
         player = this;
         this.z = 0;
         this.r = 1.5;
+        guis.push(new HPMeter());
     }
     Player.prototype.update = function () {
         if (aiming == false) {
@@ -70,6 +72,31 @@ var Player = (function (_super) {
     };
     Player.prototype.draw = function () {
     };
+
+    Player.prototype.shot = function (by) {
+        this.hp--;
+        if (this.hp <= 0) {
+            this.hp = 0;
+        }
+    };
     return Player;
 })(Entity3D);
+
+var HPMeter = (function (_super) {
+    __extends(HPMeter, _super);
+    function HPMeter() {
+        _super.call(this);
+        this.p = new vec2(30, 738);
+        this.tex = getTex("LB_Health.png");
+        this.d = new vec2(30, 24);
+    }
+    HPMeter.prototype.draw = function () {
+        for (var i = 0; i < player.hp; i++) {
+            _super.prototype.draw.call(this);
+            this.p.x += 40;
+        }
+        this.p.x = 30;
+    };
+    return HPMeter;
+})(GUI);
 //@ sourceMappingURL=player.js.map

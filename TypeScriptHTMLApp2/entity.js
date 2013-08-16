@@ -90,6 +90,9 @@ var Entity3D = (function (_super) {
             this.angle -= 360;
         _super.prototype.update.call(this);
     };
+    Entity3D.prototype.shot = function (by) {
+        document.getElementById("debug").innerHTML += "<br>AARARAURARRRGG";
+    };
     return Entity3D;
 })(Entity);
 var BillboardEntity = (function (_super) {
@@ -148,6 +151,17 @@ var Arrow = (function (_super) {
             this.verticalTrans = i * .125;
 
             var n = this.p.plus(this.v);
+            for (var i = 0; i < entities.length; i++) {
+                if ((entities[i]).height) {
+                    var e = entities[i];
+                    if (this.p.dist(e.p) < e.r) {
+                        if (this.z + this.d.y * .125 + this.d.y * .875 / 2 < e.z + (e).height && this.z + this.d.y * .875 / 2 + this.d.y * .125 > e.z) {
+                            e.shot(this);
+                            this.remove = true;
+                        }
+                    }
+                }
+            }
             if (this.collideWithWalls(n) == true)
                 this.stuck = true;
             if (this.z + this.d.y * .125 + this.d.y * .875 / 2 < this.s.bottom) {

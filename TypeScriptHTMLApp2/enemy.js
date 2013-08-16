@@ -8,10 +8,11 @@ var Enemy = (function (_super) {
     __extends(Enemy, _super);
     function Enemy(p) {
         _super.call(this, p);
-        this.height = 5;
+        this.height = 5.6;
         this.route = null;
         this.walkFrame = 1;
         this.aimFrame = 0;
+        this.speed = 1;
         this.lastSeen = null;
         this.idleTime = 400;
         this.angle = 0;
@@ -32,12 +33,15 @@ var Enemy = (function (_super) {
          {
             if (this.state)
                 this.state(); else {
+                this.speed = .5;
                 this.verticalTrans = .75;
                 if (this.canSeePlayer() == true) {
                     this.goto(player.p);
+                    this.speed = 1;
                     document.getElementById("debug").innerHTML += "<br>saw player, goto";
                 } else if (this.lastSeen != null && this.p.dist(this.lastSeen) > 10 && !key["H"]) {
                     this.goto(this.lastSeen);
+                    this.speed = 1;
                     document.getElementById("debug").innerHTML += "<br>cant see player, going to last position";
                 }
                 if (this.aimFrame > 0)
@@ -67,6 +71,7 @@ var Enemy = (function (_super) {
     Enemy.prototype.aim = function () {
         if ((this.p.dist(this.target.p) > 80 || this.canSeePlayer() == false) && this.aimFrame < -50) {
             document.getElementById("debug").innerHTML += "<br>too far from target";
+            this.speed = 1;
             this.goto(this.lastSeen);
         }
         this.aimFrame--;
@@ -119,7 +124,7 @@ var Enemy = (function (_super) {
             n.normalize();
             if (this.p.dist(this.route[0]) < 1.01)
                 n = n.scale(this.p.dist(this.route[0])); else
-                n = n.scale(1);
+                n = n.scale(this.speed);
             this.angle = Math.atan2(n.y, n.x) * 180 / Math.PI;
             if (isNaN(this.angle) == true)
                 var i;
@@ -252,6 +257,25 @@ var Enemy = (function (_super) {
             this.pathfindInSector(lastWaypoint, p, null, targetSector, lastSector, route);
             this.route = route;
         }
+    };
+    Enemy.prototype.die = function () {
+        if (this.state == this.death)
+            return;
+        this.state = this.death;
+        this.verticalTrans = 0;
+        this.idleTime = 0;
+        this.tex = getTex("npcdead.png");
+        this.nSide = 1;
+    };
+
+    Enemy.prototype.death = function () {
+        if (this.idleTime < 148) {
+            this.idleTime += 1.3;
+            this.verticalTrans = 1 - (Math.floor(this.idleTime / 150 * 6) + 1) * .125;
+        }
+    };
+    Enemy.prototype.shot = function (by) {
+        this.die();
     };
     return Enemy;
 })(Entity3D);
