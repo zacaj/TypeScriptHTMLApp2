@@ -155,7 +155,9 @@ var Arrow = (function (_super) {
                 if ((entities[i]).height) {
                     var e = entities[i];
                     if (this.p.dist(e.p) < e.r) {
-                        if (this.z + this.d.y * .125 + this.d.y * .875 / 2 < e.z + (e).height && this.z + this.d.y * .875 / 2 + this.d.y * .125 > e.z) {
+                        var tz = this.z + this.d.y * .125 + this.d.y * .875 / 2;
+                        var bz = this.z + this.d.y * .875 / 2 + this.d.y * .125;
+                        if (tz < e.z + (e).height && bz > e.z) {
                             e.shot(this);
                             this.remove = true;
                         }

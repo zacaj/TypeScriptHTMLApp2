@@ -90,8 +90,10 @@ var Enemy = (function (_super) {
 
             var t = this.target.p.dist(pos) / 2;
 
-            var yaw = this.angle + (tAngle - this.lastTargetAngle) * t;
-            var pitch = 15 + Math.random() * 1.5 - .75;
+            var yaw = this.angle + (tAngle - this.lastTargetAngle) * t + Math.random() * 1.5 - .75;
+            var pitch = 14 + Math.random() * 1.5 - .75;
+            if (player.height < 4)
+                pitch -= 3;
             var arrow = new Arrow(yaw, pitch, pos, this.z + 4 - 5, 2);
             entities.push(arrow);
         }

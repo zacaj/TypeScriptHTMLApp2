@@ -119,7 +119,9 @@ class Enemy extends Entity3D {
 			
 
 			var yaw = this.angle +(tAngle-this.lastTargetAngle)*t+Math.random() * 1.5 - .75;
-            var pitch = 15+Math.random()*1.5-.75;
+			var pitch = 15 - Math.random() * .75;
+			if (player.height < 4)
+				pitch -= 2.3;
             var arrow = new Arrow(yaw, pitch, pos, this.z+4-5,2);
             entities.push(arrow);
 		}
