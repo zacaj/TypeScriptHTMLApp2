@@ -89,9 +89,9 @@ function monmouseup(e) {
 
     if (e.button == 0) {
         if (aiming == true) {
-            var yaw = (crosshair.p.x / 1024 - .5) * 111 + player.angle + Math.random() * 2 - 1;
+            var yaw = (crosshair.p.x / 1024 - .5) * 113 + player.angle + Math.random() * 2 - 1;
             var pitch = ((1 - (crosshair.p.y / 768)) * 2 - 1) * 90 + Math.random() * 2 - 1;
-            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(player.p), 1, .08);
+            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(player.p), 1, 2);
             entities.push(arrow);
         }
     } else if (e.button == 2) {

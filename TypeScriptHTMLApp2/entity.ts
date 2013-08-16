@@ -129,7 +129,7 @@ class Arrow extends Entity3D {
 		this.tex=getTex("arrows.png");
 		this.nSide = 16;
 		this.z = z;
-		this.v.scale(speed);
+		this.v=this.v.scale(speed);
 		this.vz *= .8;
 	}
 	update() {
@@ -160,9 +160,9 @@ class Arrow extends Entity3D {
 				this.z = this.s.bottom  - this.d.y * .875 / 2;
 				this.stuck = true;
 			}
-			if (this.z - this.d.y * .875 / 2 > this.s.top)
+			if (this.z + this.d.y * .875 / 2 +this.d.y*.125 > this.s.top)
 			{
-				this.z = this.s.top  + this.d.y * .875 / 2;
+				this.z = this.s.top  - this.d.y * .875 / 2-this.d.y*.125;
 				this.stuck = true;
 			}
 			if (this.stuck == true)

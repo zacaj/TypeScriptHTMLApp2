@@ -94,8 +94,10 @@ class Enemy extends Entity3D {
             document.getElementById("debug").innerHTML += "<br>too far from target";
             this.goto(this.lastSeen);
         }
-        this.aimFrame--;
-        var tAngle = Math.atan2(this.target.p.y - this.p.y, this.target.p.x - this.p.x)*180/Math.PI;
+		this.aimFrame--;
+		var pos = new vec2(Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5).plus(this.p);
+            
+        var tAngle = Math.atan2(this.target.p.y - pos.y, this.target.p.x - pos.x)*180/Math.PI;
 		if (Math.abs(angleBetween(this.angle,tAngle)) < 5)
 			this.angle = tAngle;
 		else this.turnTowards(tAngle);
@@ -104,12 +106,11 @@ class Enemy extends Entity3D {
 		else
 			this.verticalTrans = .625;
         if (this.aimFrame < -100 && Math.abs(angleBetween(tAngle , this.angle)) < 20)
-        {
-            document.getElementById("debug").innerHTML += "<br>firing";
+		{document.getElementById("debug").innerHTML += "<br>firing";
             this.aimFrame = 250;
             var yaw = this.angle + Math.random() * 1.5 - .75;
-            var pitch = 32;
-            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5, Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * 2.5).plus(this.p), 1,.85);
+            var pitch = 15+Math.random()*1.5-.75;
+            var arrow = new Arrow(yaw, pitch, pos, this.z+4-5,2);
             entities.push(arrow);
         }
     }
@@ -179,7 +180,7 @@ class Enemy extends Entity3D {
 		if (key["H"])
 			return false;
 		var a = Math.abs(Math.atan2(player.p.y - this.p.y, player.p.x - this.p.x)) * 180 / Math.PI;
-		if (Math.abs(angleBetween(a , this.angle)) > 40)
+		if (Math.abs(angleBetween(a , this.angle)) > 70)
 			return false;
         var r = raycast(this.p,player.p,this.z+this.height,player.z+1,this.s,player.s);
         if (r == true)

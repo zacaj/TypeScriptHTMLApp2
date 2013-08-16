@@ -127,7 +127,7 @@ var Arrow = (function (_super) {
         this.tex = getTex("arrows.png");
         this.nSide = 16;
         this.z = z;
-        this.v.scale(speed);
+        this.v = this.v.scale(speed);
         this.vz *= .8;
     }
     Arrow.prototype.update = function () {
@@ -154,8 +154,8 @@ var Arrow = (function (_super) {
                 this.z = this.s.bottom - this.d.y * .875 / 2;
                 this.stuck = true;
             }
-            if (this.z - this.d.y * .875 / 2 > this.s.top) {
-                this.z = this.s.top + this.d.y * .875 / 2;
+            if (this.z + this.d.y * .875 / 2 + this.d.y * .125 > this.s.top) {
+                this.z = this.s.top - this.d.y * .875 / 2 - this.d.y * .125;
                 this.stuck = true;
             }
             if (this.stuck == true) {
