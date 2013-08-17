@@ -116,7 +116,8 @@ class Arrow extends Entity3D {
 	v: vec2;
 	vz: number;
 	stuck = false;
-	constructor(yaw: number, pitch: number, p: vec2,z:number,speed:number) {
+	by;
+	constructor(yaw: number, pitch: number, p: vec2,z:number,speed:number,by) {
 		super(p);
 		this.angle =yaw;
 		yaw = yaw * Math.PI / 180;
@@ -133,6 +134,7 @@ class Arrow extends Entity3D {
 		this.z = z;
 		this.v=this.v.scale(speed);
 		this.vz *= .8;
+		this.by = by;
 	}
 	update() {
 		if (this.stuck == false)
@@ -157,6 +159,8 @@ class Arrow extends Entity3D {
 			var n = this.p.plus(this.v);
 			for (var i = 0; i < entities.length; i++)
 			{
+				if (this.by == entities[i])
+					continue;
 				if ((<any>entities[i]).height)
 				{
 					var e = <Entity3D>entities[i];
@@ -253,8 +257,8 @@ class Button extends Decal {
 		else
 			if (key["F"])
 			{
-				var a = Math.abs(Math.atan2(this.p.y - player.p.y, this.p.x - player.p.x))*180/Math.PI;
-				if (Math.abs(a + player.angle) < 40)
+				var a = (Math.atan2(this.p.y - player.p.y, this.p.x - player.p.x))*180/Math.PI;
+				if (Math.abs(angleBetween(a,player.angle)) < 40)
 					if (this.p.dist(player.p)<8)
 				{
 					this.onFor = 30;
@@ -307,4 +311,14 @@ function doDoor(s:Sector) {
 		entities.push(new DoorDoer(s, true));
 	else
 		entities.push(new DoorDoer(s, false));
+}
+class Goal extends BillboardEntity {
+	constructor(p: vec2) {
+		super(p, getTex(""));
+	}
+	update() {
+		if (player.p.dist(this.p) < 5)
+		{
+		}
+	}
 }

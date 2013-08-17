@@ -16,10 +16,12 @@ var Player = (function (_super) {
         this.vpa = new vec2(0, 0);
         this.vpb = new vec2(0, 0);
         this.hp = 3;
+        this.reload = 0;
         player = this;
         this.z = 0;
         this.r = 1.5;
         guis.push(new HPMeter());
+        guis.push(new Reload());
     }
     Player.prototype.update = function () {
         if (aiming == false) {
@@ -69,6 +71,8 @@ var Player = (function (_super) {
         this.vpa.y = this.p.y + Math.sin(this.angle * Math.PI / 180 + Math.PI / 2) * 10000;
         this.vpb.x = this.p.x + Math.cos(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
         this.vpb.y = this.p.y + Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
+        if (this.reload > 0)
+            this.reload--;
     };
     Player.prototype.draw = function () {
     };
@@ -76,6 +80,11 @@ var Player = (function (_super) {
     Player.prototype.shot = function (by) {
         this.hp--;
         if (this.hp <= 0) {
+            var gui = new GUI();
+            gui.p = new vec2(1024 / 2, 768 / 2);
+            gui.tex = getTex("gameover.png");
+            gui.d = new vec2(1024, 768);
+            guis.push(gui);
             this.hp = 0;
         }
     };
@@ -86,7 +95,7 @@ var HPMeter = (function (_super) {
     __extends(HPMeter, _super);
     function HPMeter() {
         _super.call(this);
-        this.p = new vec2(30, 738);
+        this.p = new vec2(30, 748);
         this.tex = getTex("LB_Health.png");
         this.d = new vec2(30, 24);
     }
@@ -98,5 +107,20 @@ var HPMeter = (function (_super) {
         this.p.x = 30;
     };
     return HPMeter;
+})(GUI);
+
+var Reload = (function (_super) {
+    __extends(Reload, _super);
+    function Reload() {
+        _super.call(this);
+        this.p = new vec2(985, 718);
+        this.tex = getTex("LB_Counter_Arrow.png");
+        this.d = new vec2(20, 45);
+    }
+    Reload.prototype.draw = function () {
+        if (player.reload < 0 || Math.floor(player.reload / 9) % 2 == 0)
+            _super.prototype.draw.call(this);
+    };
+    return Reload;
 })(GUI);
 //@ sourceMappingURL=player.js.map

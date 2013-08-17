@@ -134,8 +134,7 @@ function loaded() {
     en.nSide = 8;
     en.angle = 90;
     entities.push(en);*/
-    entities.push(new Enemy((new vec2(690, 250))));
-
+    //entities.push(new Enemy((new vec2(690,250))));
     /*var ar = new Entity3D(player.p.plus(new vec2(10, 10)));
     ar.tex = getTex("arrowlevel.png");
     ar.nSide = 16;
@@ -167,7 +166,7 @@ function update() {
             i--;
             continue;
         }
-        if (!entities[i].s.pointIsIn(entities[i].p)) {
+        if (!entities[i].s || !entities[i].s.pointIsIn(entities[i].p)) {
             var t = getSector(entities[i].p);
             if (t != null)
                 entities[i].s = t;
@@ -441,7 +440,7 @@ function isLeft(a, b, c) {
 }
 var lines, at;
 function load(str) {
-    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_NPC03.png", 128, 128, "arrows.png", 256, 256, "LB_Target.png", 44, 44, "LB_Grass02.png", 78, 122, "LB_Grass01.png", 91, 128, "LB_Button01Off.png", 11, 11, "LB_Button01On.png", 11, 11, "npcdead.png", 128, 128, "LB_Health.png", 94, 70];
+    var textures = ["LB_Crosshair.png", 35, 24, "LB_Bow01.png", 475, 208, "LB_NPC03.png", 128, 128, "arrows.png", 256, 256, "LB_Target.png", 44, 44, "LB_Grass02.png", 78, 122, "LB_Grass01.png", 91, 128, "LB_Button01Off.png", 11, 11, "LB_Button01On.png", 11, 11, "npcdead.png", 128, 128, "LB_Health.png", 94, 70, "gameover.png", 1024, 768, "win.png", 1024, 768, "LB_Counter_Arrow.png", 24, 74];
     walls.splice(0, walls.length);
     sectors.splice(0, sectors.length);
     entities.splice(0, entities.length);
@@ -485,11 +484,21 @@ function load(str) {
         for (var j = 0; j < nP; j++) {
             s.pts.push(getVec2(lines[at++]));
         }
+        nP = parseInt(lines[at++]);
+        s.extPts = new Array();
+        for (var j = 0; j < nP; j++) {
+            s.extPts.push(getVec2(lines[at++]));
+        }
+        var nH = parseInt(lines[at++]);
+        for (var j = 0; j < nH; j++) {
+            nP = parseInt(lines[at++]);
+            at += nP;
+        }
         var nT = parseInt(lines[at++]);
         s.tris = new Array();
         for (var j = 0; j < nT; j++) {
             var t3 = lines[at++].split(',');
-            s.tris.push(makeTri(s.pts[t3[0]], s.pts[t3[1]], s.pts[t3[2]]));
+            s.tris.push(makeTri(s.extPts[t3[0]], s.extPts[t3[1]], s.extPts[t3[2]]));
         }
         s.p = getVec2(lines[at++]);
         sectors.push(s);
@@ -511,10 +520,11 @@ function load(str) {
         dir.normalize();
         var n = new vec2(-dir.y, dir.x);
         var pt = wall.a.plus(n);
-        if (!wall.s.pointIsIn(pt)) {
-            n.x = -n.x;
-            n.y = -n.y;
-        }
+        if (wall.s)
+            if (!wall.s.pointIsIn(pt)) {
+                n.x = -n.x;
+                n.y = -n.y;
+            }
         wall.n = n;
     }
     for (var i = 0; i < sectors.length; i++) {
@@ -572,6 +582,10 @@ function loadEntities() {
                 doDoor(s);
             }, r));
         }
+        if (type == "e")
+            entities.push(new Enemy(p));
+        if (type == "goal")
+            entities.push(new Goal(p));
     }
 }
 var lpts;

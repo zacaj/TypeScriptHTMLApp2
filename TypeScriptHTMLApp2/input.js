@@ -88,11 +88,12 @@ function monmouseup(e) {
     e.preventDefault();
 
     if (e.button == 0) {
-        if (aiming == true) {
+        if (aiming == true && player.reload < 2) {
             var yaw = (crosshair.p.x / 1024 - .5) * 113 + player.angle + Math.random() * 2 - 1;
             var pitch = ((1 - (crosshair.p.y / 768)) * 2 - 1) * 90 + Math.random() * 2 - 1;
-            var arrow = new Arrow(yaw, pitch, new vec2(Math.cos(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5, Math.sin(player.angle * Math.PI / 180 - Math.PI / 2) * 2.5).plus(player.p), 1, 2);
+            var arrow = new Arrow(yaw, pitch, (player.p), 0, 2, player);
             entities.push(arrow);
+            player.reload = 110;
         }
     } else if (e.button == 2) {
         aiming = false;

@@ -122,7 +122,11 @@ class Enemy extends Entity3D {
 			var pitch = 15 - Math.random() * .75;
 			if (player.height < 4)
 				pitch -= 2.3;
-            var arrow = new Arrow(yaw, pitch, pos, this.z+4-5,2);
+			if (pos.dist(this.target.p) < 25)
+				pitch -= 2.3;
+			if (pos.dist(this.target.p) < 15)
+				pitch -= 2.3;
+            var arrow = new Arrow(yaw, pitch, pos, this.z+4-5,2,this);
             entities.push(arrow);
 		}
 		this.lastTargetAngle = tAngle;
@@ -151,7 +155,7 @@ class Enemy extends Entity3D {
 				}
             }
         }//arrived at dest, see player
-        if ((this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75)))
+		if ((this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75) && this.route[this.route.length - 1].dist(this.lastSeen)>10))
         {
             this.route = null;
             this.state = null; document.getElementById("debug").innerHTML += "<br>reached dest";
@@ -192,7 +196,7 @@ class Enemy extends Entity3D {
 	canSeePlayer(): bool {
 		if (key["H"])
 			return false;
-		var a = Math.abs(Math.atan2(player.p.y - this.p.y, player.p.x - this.p.x)) * 180 / Math.PI;
+		var a = (Math.atan2(player.p.y - this.p.y, player.p.x - this.p.x)) * 180 / Math.PI;
 		if (Math.abs(angleBetween(a , this.angle)) > 70)
 			return false;
         var r = raycast(this.p,player.p,this.z+this.height,player.z+1,this.s,player.s);

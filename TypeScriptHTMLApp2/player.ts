@@ -7,6 +7,7 @@ class Player extends Entity3D {
 	vpa: vec2=new vec2(0,0);//view plane
 	vpb: vec2 = new vec2(0, 0);
 	hp = 3;
+	reload = 0;
 	update() {
 		if (aiming == false)
 		{
@@ -65,6 +66,9 @@ class Player extends Entity3D {
 		this.vpa.y = this.p.y+Math.sin(this.angle * Math.PI / 180 + Math.PI / 2)*10000;
 		this.vpb.x=this.p.x+Math.cos(this.angle * Math.PI / 180 - Math.PI / 2)*10000;
 		this.vpb.y = this.p.y + Math.sin(this.angle * Math.PI / 180 - Math.PI / 2) * 10000;
+		if (this.reload > 0)
+			this.reload--;
+			
 	}
 	draw() {
 	}
@@ -74,11 +78,17 @@ class Player extends Entity3D {
 		this.z = 0;
 		this.r = 1.5;
 		guis.push(new HPMeter());
+		guis.push(new Reload());
 	}
 	shot(by) {
 		this.hp--;
 		if (this.hp <= 0)
 		{
+			var gui = new GUI();
+			gui.p = new vec2(1024 / 2, 768 / 2);
+			gui.tex = getTex("gameover.png");
+			gui.d = new vec2(1024, 768);
+			guis.push(gui);
 			this.hp = 0;
 		}
 	}
@@ -87,7 +97,7 @@ class Player extends Entity3D {
 class HPMeter extends GUI {
 	constructor() {
 		super();
-		this.p = new vec2(30, 738);
+		this.p = new vec2(30, 748);
 		this.tex = getTex("LB_Health.png");
 		this.d = new vec2(30, 24);
 	}
@@ -98,5 +108,19 @@ class HPMeter extends GUI {
 			this.p.x += 45;
 		}
 		this.p.x = 30;
+	}
+}
+
+class Reload extends GUI
+{
+	constructor() {
+		super();
+		this.p = new vec2(985, 718);
+		this.tex = getTex("LB_Counter_Arrow.png");
+		this.d = new vec2(20,45);
+	}
+	draw() {
+		if (player.reload < 0 || Math.floor(player.reload / 9) % 2 == 0)
+			super.draw();
 	}
 }

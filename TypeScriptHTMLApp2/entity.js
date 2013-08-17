@@ -114,7 +114,7 @@ var BillboardEntity = (function (_super) {
 })(Entity);
 var Arrow = (function (_super) {
     __extends(Arrow, _super);
-    function Arrow(yaw, pitch, p, z, speed) {
+    function Arrow(yaw, pitch, p, z, speed, by) {
         _super.call(this, p);
         this.stuck = false;
         this.angle = yaw;
@@ -132,6 +132,7 @@ var Arrow = (function (_super) {
         this.z = z;
         this.v = this.v.scale(speed);
         this.vz *= .8;
+        this.by = by;
     }
     Arrow.prototype.update = function () {
         if (this.stuck == false) {
@@ -152,9 +153,11 @@ var Arrow = (function (_super) {
 
             var n = this.p.plus(this.v);
             for (var i = 0; i < entities.length; i++) {
+                if (this.by == entities[i])
+                    continue;
                 if ((entities[i]).height) {
                     var e = entities[i];
-                    if (this.p.dist(e.p) < e.r) {
+                    if (this.p.dist(e.p) < e.r * 1.2) {
                         var tz = this.z + this.d.y * .125 + this.d.y * .875 / 2;
                         var bz = this.z + this.d.y * .875 / 2 + this.d.y * .125;
                         if (tz < e.z + (e).height && bz > e.z) {
@@ -237,8 +240,8 @@ var Button = (function (_super) {
                 this.tex = getTex("LB_Button01On.png"); else
                 this.tex = getTex("LB_Button01Off.png");
         } else if (key["F"]) {
-            var a = Math.abs(Math.atan2(this.p.y - player.p.y, this.p.x - player.p.x)) * 180 / Math.PI;
-            if (Math.abs(a + player.angle) < 40)
+            var a = (Math.atan2(this.p.y - player.p.y, this.p.x - player.p.x)) * 180 / Math.PI;
+            if (Math.abs(angleBetween(a, player.angle)) < 40)
                 if (this.p.dist(player.p) < 8) {
                     this.onFor = 30;
                     this.func();
@@ -286,4 +289,15 @@ function doDoor(s) {
         entities.push(new DoorDoer(s, true)); else
         entities.push(new DoorDoer(s, false));
 }
+var Goal = (function (_super) {
+    __extends(Goal, _super);
+    function Goal(p) {
+        _super.call(this, p, getTex(""));
+    }
+    Goal.prototype.update = function () {
+        if (player.p.dist(this.p) < 5) {
+        }
+    };
+    return Goal;
+})(BillboardEntity);
 //@ sourceMappingURL=entity.js.map
