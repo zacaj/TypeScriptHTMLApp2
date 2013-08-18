@@ -24,6 +24,7 @@ class Wall {
 }
 var walls: Wall[] = new Array<Wall>();
 class Sector {
+	i: number;
     walls: Wall[];
     pts: vec2[];
     extPts: vec2[];
@@ -533,18 +534,36 @@ function load(str) {
 		var dir = wall.b.minus(wall.a);
 		dir.normalize();
 		var n = new vec2(-dir.y, dir.x);
-		var pt = wall.a.plus(n);
-		if(wall.s)
-		if (!wall.s.pointIsIn(pt))
+		var pt = wall.a.plus(wall.b).scale(.5).plus(n);
+		if (wall.s)
 		{
-			n.x = -n.x;
-			n.y = -n.y;
+			var flip = false;
+			/*if (!wall.isPortal)
+			{
+				if(wall.s.pointIsIn(pt))
+					flip = true;
+			}
+			else*/
+			{
+				for (var j = 0; j < wall.s.tris.length && !flip; j++)
+				{
+					if (wall.s.tris[j].pointIsIn(pt))
+						flip = true;
+				}
+				flip = !flip;
+			}
+
+				if(flip==true)
+			{
+				n.x = -n.x;
+				n.y = -n.y;
+			}
 		}
 		wall.n = n;
 	}
 	for (var i = 0; i < sectors.length; i++)
 	{
-
+		s.i = i;
 		s.pts.splice(0, s.pts.length);
 		var lastWall = s.walls[0];
 		var pt = lastWall.b;
@@ -595,18 +614,23 @@ function loadEntities() {
 		if (type == "btn")
 		{
 			var s = sectors[parseInt(data[1])];
-			entities.push(new Button(getClosestWall(p), function () {
-				doDoor(s);
-			}));
+			entities.push(new Button(getClosestWall(p), (function (x) {
+				return function () {
+					doDoor(sectors[x]);
+				};
+			})(j)));
 		}
 		if (type == "trgt")
 		{
-			var s = sectors[parseInt(data[1])];
+			var j = parseInt(data[1]);
+			var s = sectors[j];
 			var h = parseFloat(data[2]);
 			var r = parseFloat(data[3]);
-			entities.push(new Target(getClosestWall(p), h, function () {
-				doDoor(s);
-			}, r));
+			entities.push(new Target(getClosestWall(p), h, (function (x) {
+				return function () {
+					doDoor(sectors[x]);
+				};
+			})(j), r));
 		}
 		if (type == "e")
 			entities.push(new Enemy(p));

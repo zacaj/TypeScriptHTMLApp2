@@ -155,7 +155,7 @@ class Enemy extends Entity3D {
 				}
             }
         }//arrived at dest, see player
-		if ((this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75) && this.route[this.route.length - 1].dist(this.lastSeen)>10))
+		if ((this.route.length == 0 || (this.p.dist(this.route[this.route.length - 1]) < 75) && (this.canSeePlayer()==true)))
         {
             this.route = null;
             this.state = null; document.getElementById("debug").innerHTML += "<br>reached dest";

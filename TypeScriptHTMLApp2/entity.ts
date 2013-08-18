@@ -36,7 +36,7 @@ class Entity {
 				}
 			}
 
-			if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom - this.z > 2.1) || w.isPortal == false))
+			if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom - this.z > 2.1 && this.z+(<any>this).height<w.portal.top) || w.isPortal == false))
 			{
 				sd = Math.sqrt(sd);
 				var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
@@ -157,25 +157,6 @@ class Arrow extends Entity3D {
 			this.verticalTrans = i * .125;
 
 			var n = this.p.plus(this.v);
-			for (var i = 0; i < entities.length; i++)
-			{
-				if (this.by == entities[i])
-					continue;
-				if ((<any>entities[i]).height)
-				{
-					var e = <Entity3D>entities[i];
-					if (this.p.dist(e.p) < e.r*1.2)
-					{
-						var tz = this.z + this.d.y * .125 + this.d.y * .875 / 2;
-						var bz = this.z + this.d.y * .875 / 2 + this.d.y * .125;
-						if (tz < e.z + (<any>e).height && bz > e.z)
-						{
-							e.shot(this);
-							this.remove = true;
-						}
-					}
-				}
-			}
 			if (this.collideWithWalls(n) == true)
 				this.stuck = true;
 			if (this.z + this.d.y * .125+ this.d.y * .875 / 2 < this.s.bottom)
@@ -198,6 +179,26 @@ class Arrow extends Entity3D {
 						{
 							(<any>entities[i]).hit = true;
 							(<any>entities[i]).func();
+						}
+					}
+				}
+			}
+			else
+			for (var i = 0; i < entities.length; i++)
+			{
+				if (this.by == entities[i])
+					continue;
+				if ((<any>entities[i]).height && (<any>entities[i]).hit==undefined)
+				{
+					var e = <Entity3D>entities[i];
+					if (this.p.dist(e.p) < e.r * 1.2)
+					{
+						var tz = this.z + this.d.y * .125 + this.d.y * .875 / 2;
+						var bz = this.z + this.d.y * .875 / 2 + this.d.y * .125;
+						if (tz < e.z + (<any>e).height && bz > e.z)
+						{
+							e.shot(this);
+							this.remove = true;
 						}
 					}
 				}

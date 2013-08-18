@@ -37,7 +37,7 @@ var Entity = (function () {
                 }
             }
 
-            if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom - this.z > 2.1) || w.isPortal == false)) {
+            if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom - this.z > 2.1 && this.z + (this).height < w.portal.top) || w.isPortal == false)) {
                 sd = Math.sqrt(sd);
                 var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
                 var wp = projectPoint(n, w.a, w.b);
@@ -152,21 +152,6 @@ var Arrow = (function (_super) {
             this.verticalTrans = i * .125;
 
             var n = this.p.plus(this.v);
-            for (var i = 0; i < entities.length; i++) {
-                if (this.by == entities[i])
-                    continue;
-                if ((entities[i]).height) {
-                    var e = entities[i];
-                    if (this.p.dist(e.p) < e.r * 1.2) {
-                        var tz = this.z + this.d.y * .125 + this.d.y * .875 / 2;
-                        var bz = this.z + this.d.y * .875 / 2 + this.d.y * .125;
-                        if (tz < e.z + (e).height && bz > e.z) {
-                            e.shot(this);
-                            this.remove = true;
-                        }
-                    }
-                }
-            }
             if (this.collideWithWalls(n) == true)
                 this.stuck = true;
             if (this.z + this.d.y * .125 + this.d.y * .875 / 2 < this.s.bottom) {
@@ -186,7 +171,22 @@ var Arrow = (function (_super) {
                         }
                     }
                 }
-            }
+            } else
+                for (var i = 0; i < entities.length; i++) {
+                    if (this.by == entities[i])
+                        continue;
+                    if ((entities[i]).height && (entities[i]).hit == undefined) {
+                        var e = entities[i];
+                        if (this.p.dist(e.p) < e.r * 1.2) {
+                            var tz = this.z + this.d.y * .125 + this.d.y * .875 / 2;
+                            var bz = this.z + this.d.y * .875 / 2 + this.d.y * .125;
+                            if (tz < e.z + (e).height && bz > e.z) {
+                                e.shot(this);
+                                this.remove = true;
+                            }
+                        }
+                    }
+                }
         }
     };
     return Arrow;
