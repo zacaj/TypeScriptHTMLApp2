@@ -122,6 +122,8 @@ class Enemy extends Entity3D {
 			var pitch = 15 - Math.random() * .75;
 			if (player.height < 4)
 				pitch -= 2.3;
+			if (pos.dist(this.target.p) < 35)
+				pitch -= 2.3;
 			if (pos.dist(this.target.p) < 25)
 				pitch -= 2.3;
 			if (pos.dist(this.target.p) < 15)

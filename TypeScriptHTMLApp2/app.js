@@ -505,6 +505,7 @@ function load(str) {
         s.extendedWalls = s.extendedWalls.concat(s.walls);
     }
     for (var i = 0; i < walls.length; i++) {
+        walls[i].i = i;
         var t2 = (walls[i]).t;
         walls[i].s = sectors[t2.x];
         if (t2.y != -1) {
@@ -577,16 +578,20 @@ function loadEntities() {
         var data = str.split('\n');
         var type = data[0];
         if (type == "spawn")
-            entities.push(new Player(p));
+            if (player != null)
+                var h; else
+                entities.push(new Player(p));
         if (type == "g")
             addGrass(p);
         if (type == "btn") {
+            var j = parseInt(data[1]);
             var s = sectors[parseInt(data[1])];
             entities.push(new Button(getClosestWall(p), (function (x) {
                 return function () {
                     doDoor(sectors[x]);
                 };
             })(j)));
+            doDoor(s);
         }
         if (type == "trgt") {
             var j = parseInt(data[1]);
@@ -598,6 +603,7 @@ function loadEntities() {
                     doDoor(sectors[x]);
                 };
             })(j), r));
+            doDoor(s);
         }
         if (type == "e")
             entities.push(new Enemy(p));

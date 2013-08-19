@@ -30,6 +30,8 @@ var Entity = (function () {
             var sd = 999999;
             var w;
             for (var i = 0; i < this.s.extendedWalls.length; i++) {
+                if (this.s.extendedWalls[i].isPortal == true && this.s.extendedWalls[i].portal == this.s)
+                    continue;
                 var d = distToSegmentSquared(n, this.s.extendedWalls[i].a, this.s.extendedWalls[i].b);
                 if (d < sd) {
                     sd = d;
@@ -37,7 +39,7 @@ var Entity = (function () {
                 }
             }
 
-            if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom - this.z > 2.1 && this.z + (this).height < w.portal.top) || w.isPortal == false)) {
+            if (sd <= this.r * this.r && ((w.isPortal == true && (w.portal.bottom - this.z > 2.1 || (this).height > w.portal.top - w.portal.bottom)) || w.isPortal == false)) {
                 sd = Math.sqrt(sd);
                 var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
                 var wp = projectPoint(n, w.a, w.b);
@@ -276,6 +278,7 @@ var DoorDoer = (function (_super) {
             }
         } else {
             this.s.top += .3;
+
             if (this.s.top > this.s.oTop) {
                 this.remove = true;
                 this.s.top = this.s.oTop;

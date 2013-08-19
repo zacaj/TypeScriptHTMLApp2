@@ -7,7 +7,7 @@ var __extends = this.__extends || function (d, b) {
 ///<reference path="app.ts" />
 ///<reference path="input.ts" />
 ///<reference path="entity.ts" />
-var player;
+var player = null;
 var Player = (function (_super) {
     __extends(Player, _super);
     function Player(p) {

@@ -28,6 +28,8 @@ class Entity {
 			var w: Wall;
 			for (var i = 0; i < this.s.extendedWalls.length; i++)
 			{
+				if (this.s.extendedWalls[i].isPortal == true && this.s.extendedWalls[i].portal == this.s)
+					continue;
 				var d = distToSegmentSquared(n, this.s.extendedWalls[i].a, this.s.extendedWalls[i].b);
 				if (d < sd)
 				{
@@ -36,7 +38,7 @@ class Entity {
 				}
 			}
 
-			if (sd <= this.r * this.r && ((w.isPortal == true && w.portal.bottom - this.z > 2.1 && this.z+(<any>this).height<w.portal.top) || w.isPortal == false))
+			if (sd <= this.r * this.r && ((w.isPortal == true  && (w.portal.bottom - this.z > 2.1 || (<any>this).height>w.portal.top-w.portal.bottom)) || w.isPortal == false))
 			{
 				sd = Math.sqrt(sd);
 				var dp = new vec2(n.x - this.p.x, n.y - this.p.y);
@@ -289,8 +291,13 @@ class DoorDoer extends Entity {
 		if (this.dir == true)
 		{
 			this.s.top -= .3;
-			//this.s.top -= .03;
+			/*this.s.bottom += .3;
 			if (this.s.bottom > this.s.top)
+			{
+				this.remove = true;
+				this.s.bottom = this.s.top;
+			}*/
+		if (this.s.bottom > this.s.top)
 			{
 				this.remove = true;
 				this.s.top = this.s.bottom;
@@ -299,7 +306,13 @@ class DoorDoer extends Entity {
 		else
 		{
 			this.s.top += .3;
-			if (this.s.top > this.s.oTop)
+			/*this.s.bottom -= .3;
+			if (this.s.bottom < this.s.oBottom)
+			{
+				this.remove = true;
+				this.s.bottom = this.s.oBottom;
+			}*/
+		if (this.s.top > this.s.oTop)
 			{
 				this.remove = true;
 				this.s.top = this.s.oTop;

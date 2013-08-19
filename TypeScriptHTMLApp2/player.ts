@@ -1,7 +1,7 @@
 ///<reference path="app.ts" />
 ///<reference path="input.ts" />
 ///<reference path="entity.ts" />
-var player: Player;
+var player: Player=null;
 class Player extends Entity3D {
 	height = 5;
 	vpa: vec2=new vec2(0,0);//view plane
